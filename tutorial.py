@@ -2,6 +2,7 @@ import torch
 from torch_geometric.data import Data
 
 from hyper_sheaf.models.sheaf_hgnn.models import SheafHyperGNN
+from hyper_sheaf.models.sheaf_hgcn.models import SheafHyperGCN
 
 if __name__ == '__main__':
     device = torch.device('cpu')
@@ -27,6 +28,28 @@ if __name__ == '__main__':
     ).to(device)
 
     model = SheafHyperGNN(
+        in_channels=64,
+        out_channels=5,
+        hidden_channels=32,
+        use_lin2=True,
+        he_feat_type='var1',
+        num_layers=2,
+        sheaf_pred_block='type_concat',
+        sheaf_normtype='sym_degree_norm',
+        residual_connections=False,
+        dropout=0.3678358540805298,
+        sheaf_type='DiagSheafs',
+        stalk_dimension=6,
+        num_node_types=num_node_types,
+        num_hyperedge_types=num_hyperedge_types
+    ).to(device)
+
+    out = model(data)
+    print(out.shape)
+
+
+    model = SheafHyperGCN(
+        V=data.num_nodes,
         in_channels=64,
         out_channels=5,
         hidden_channels=32,

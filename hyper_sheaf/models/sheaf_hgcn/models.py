@@ -8,14 +8,14 @@ from torch_geometric.nn import Linear
 from torch_scatter import scatter_mean, scatter_add
 
 from hyper_sheaf.models.mlp import MLP
+from hyper_sheaf.models.sheaf_hgcn.hgcn_sheaf_laplacians import (SheafLaplacianDiag,
+                                                                 SheafLaplacianOrtho,
+                                                                 SheafLaplacianGeneral, )
 from hyper_sheaf.models.sheaf_hgcn.sheaf_builder import (HGCNSheafBuilderDiag,
                                                          HGCNSheafBuilderOrtho,
                                                          HGCNSheafBuilderGeneral,
                                                          HGCNSheafBuilderLowRank, )
 from hyper_sheaf.utils import utils
-from hyper_sheaf.models.sheaf_hgcn.hgcn_sheaf_laplacians import (SheafLaplacianDiag,
-                                                                 SheafLaplacianOrtho,
-                                                                 SheafLaplacianGeneral, )
 
 
 class SheafHyperGCN(nn.Module):
@@ -42,10 +42,14 @@ class SheafHyperGCN(nn.Module):
         residual_connections: bool = False,
         use_lin2: bool = False,
         sheaf_special_head: bool = False,
-        sheaf_pred_block: str = "MLP_var1",
+            sheaf_pred_block: Literal[
+                'local_concat', 'type_concat', 'type_ensemble'] = "local_concat",
+            he_feat_type: Literal['var1', 'var2', 'var3', 'cp_decomp'] = 'var1',
         sheaf_dropout: bool = False,
+            rank: int = 2,
+            num_node_types: int = 6,
+            num_hyperedge_types: int = 3,
         mediators: bool = False,
-        rank: int = 2,
         **_kwargs,
     ):
         super(SheafHyperGCN, self).__init__()
@@ -141,6 +145,9 @@ class SheafHyperGCN(nn.Module):
                 sheaf_pred_block=sheaf_pred_block,
                 sheaf_dropout=sheaf_dropout,
                 rank=rank,
+                he_feat_type=he_feat_type,
+                num_node_types=num_node_types,
+                num_edge_types=num_hyperedge_types
             )
         )
 
@@ -159,6 +166,9 @@ class SheafHyperGCN(nn.Module):
                         sheaf_special_head=sheaf_special_head,
                         sheaf_pred_block=sheaf_pred_block,
                         sheaf_dropout=sheaf_dropout,
+                        he_feat_type=he_feat_type,
+                        num_edge_types=num_hyperedge_types,
+                        num_node_types=num_node_types
                     )
                 )
 
@@ -339,7 +349,7 @@ class SheafHyperGCN(nn.Module):
             if i == 0 or self.dynamic_sheaf:
                 # compute the sheaf
                 sheaf = self.sheaf_builder[i](
-                    H, hyperedge_attr, edge_index
+                    H, hyperedge_attr, edge_index, data.node_types, data.hyperedge_types
                 )  # N x E x d x d
 
                 # build the laplacian based on edges amax(F_v<e(x_v)) ~ amin(F_v<e(x_v))
