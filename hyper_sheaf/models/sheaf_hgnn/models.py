@@ -56,9 +56,9 @@ class SheafHyperGNN(nn.Module):
             residual_connections: bool = False,
             use_lin2: bool = False,
             sheaf_special_head: bool = False,
-            sheaf_pred_block: Literal[
+            sheaf_learner: Literal[
                 'local_concat', 'type_concat', 'type_ensemble'] = "local_concat",
-            he_feat_type: Literal['var1', 'var2', 'var3', 'cp_decomp'] = 'var1',
+            he_feature_builder: Literal['var1', 'var2', 'var3', 'cp_decomp'] = 'var1',
             sheaf_dropout: bool = False,
             rank: int = 2,
             is_vshae: bool = False,
@@ -87,8 +87,8 @@ class SheafHyperGNN(nn.Module):
         )
         self.residual = residual_connections
         self.is_vshae = is_vshae
-        self.he_feat_type = he_feat_type
-        self.pred_block = sheaf_pred_block
+        self.he_feat_type = he_feature_builder
+        self.pred_block = sheaf_learner
 
         self.hyperedge_attr = None
         if cuda in [0, 1]:
@@ -145,10 +145,10 @@ class SheafHyperGNN(nn.Module):
                 dropout=dropout,
                 allset_input_norm=allset_input_norm,
                 sheaf_special_head=sheaf_special_head,
-                sheaf_pred_block=sheaf_pred_block,
+                sheaf_pred_block=sheaf_learner,
                 sheaf_dropout=sheaf_dropout,
                 sheaf_normtype=self.norm,
-                he_feat_type=he_feat_type,
+                he_feat_type=he_feature_builder,
                 num_edge_types=num_hyperedge_types,
                 num_node_types=num_node_types
             )
@@ -198,11 +198,11 @@ class SheafHyperGNN(nn.Module):
                         dropout=dropout,
                         allset_input_norm=allset_input_norm,
                         sheaf_special_head=sheaf_special_head,
-                        sheaf_pred_block=sheaf_pred_block,
+                        sheaf_pred_block=sheaf_learner,
                         sheaf_dropout=sheaf_dropout,
                         sheaf_normtype=self.norm,
                         rank=rank,
-                        he_feat_type=he_feat_type,
+                        he_feat_type=he_feature_builder,
                         num_edge_types=num_hyperedge_types,
                         num_node_types=num_node_types
                     )

@@ -4,14 +4,14 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
-from hyper_sheaf.compute_he_features import (
+from hyper_sheaf.hyperedge_feature_builders import (
     compute_hyperedge_features_var1,
     compute_hyperedge_features_var2,
     compute_hyperedge_features_var3,
     compute_hyperedge_index_cp_decomp,
 )
 from hyper_sheaf.models.mlp import MLP
-from hyper_sheaf.sheaf_pred_blocks import (
+from hyper_sheaf.sheaf_learners import (
     predict_block_local_concat,
     predict_block_type_concat,
     predict_block_type_ensemble,
