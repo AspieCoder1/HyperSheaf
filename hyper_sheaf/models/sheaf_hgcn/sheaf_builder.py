@@ -16,6 +16,7 @@ from hyper_sheaf.sheaf_learners import (
     predict_block_type_concat,
     predict_block_type_ensemble,
 )
+from hyper_sheaf.utils.orthogonal import Orthogonal
 
 
 class HGNCSheafBuilder(nn.Module):
@@ -312,6 +313,9 @@ class HGCNSheafBuilderOrtho(HGNCSheafBuilder):
             sheaf_out_channels=stalk_dimension * (stalk_dimension - 1) // 2,
             he_feat_type=he_feat_type
         )
+        self.orth_transform = Orthogonal(
+            d=self.d, orthogonal_map="householder"
+        )  # method applied to transform params into ortho dxd matrix
 
     # this is exclusively for diagonal sheaf
     def forward(self, x, e, hyperedge_index, node_types, hyperedge_types):

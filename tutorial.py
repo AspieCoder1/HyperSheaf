@@ -24,22 +24,15 @@ if __name__ == '__main__':
         node_types=node_types,
         hyperedge_types=hyperedge_types,
         num_hyperedges=3,
-        num_x=num_nodes
+        n_x=num_nodes
     ).to(device)
 
     model = SheafHyperGNN(
         in_channels=64,
         out_channels=5,
-        hidden_channels=32,
         use_lin2=True,
         he_feature_builder='var1',
-        num_layers=2,
         sheaf_learner='type_concat',
-        sheaf_normtype='sym_degree_norm',
-        residual_connections=False,
-        dropout=0.3678358540805298,
-        sheaf_type='DiagSheafs',
-        stalk_dimension=6,
         num_node_types=num_node_types,
         num_hyperedge_types=num_hyperedge_types
     ).to(device)
@@ -51,16 +44,9 @@ if __name__ == '__main__':
         V=data.num_nodes,
         in_channels=64,
         out_channels=5,
-        hidden_channels=32,
         use_lin2=True,
         he_feat_type='var1',
-        num_layers=2,
         sheaf_pred_block='type_concat',
-        sheaf_normtype='sym_degree_norm',
-        residual_connections=False,
-        dropout=0.3678358540805298,
-        sheaf_type='DiagSheafs',
-        stalk_dimension=6,
         num_node_types=num_node_types,
         num_hyperedge_types=num_hyperedge_types
     ).to(device)
