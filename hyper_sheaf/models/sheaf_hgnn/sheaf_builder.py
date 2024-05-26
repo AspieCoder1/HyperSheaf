@@ -9,7 +9,7 @@ from torch_scatter import scatter_add
 
 from hyper_sheaf.utils import utils
 from hyper_sheaf.utils.orthogonal import Orthogonal
-from ..mlp import MLP
+from hyper_sheaf.utils.mlp import MLP
 from hyper_sheaf.hyperedge_feature_builders import (
     compute_hyperedge_features_var1,
     compute_hyperedge_features_var2,
@@ -21,6 +21,7 @@ from hyper_sheaf.sheaf_learners import (
     predict_block_type_concat,
     predict_block_type_ensemble,
 )
+from hyper_sheaf.feature_builders import BaseHeFeatBuilder
 
 
 # helper functions to predict sigma(MLP(x_v || h_e)) varying how thw attributes for hyperedge are computed
@@ -40,7 +41,7 @@ class SheafBuilder(nn.Module):
             num_node_types: int = 3,
             num_edge_types: int = 6,
             sheaf_out_channels: Optional[int] = None,
-            he_feat_type: str = 'var1'
+            he_feat_builder: Optional[BaseHeFeatBuilder] = None
     ):
         super(SheafBuilder, self).__init__()
         self.prediction_type = (
@@ -55,41 +56,41 @@ class SheafBuilder(nn.Module):
         self.sheaf_act = sheaf_act
         self.num_node_types = num_node_types
         self.num_edge_types = num_edge_types
-        self.he_feat_type = he_feat_type
+        self.he_feat_builder = he_feat_builder
         if sheaf_out_channels is None:
             self.sheaf_out_channels = stalk_dimension
         else:
             self.sheaf_out_channels = sheaf_out_channels
 
-        if self.he_feat_type == "var3":
-            self.sheaf_phi = MLP(
-                in_channels=self.MLP_hidden,
-                hidden_channels=hidden_channels,
-                out_channels=hidden_channels,
-                num_layers=1,
-                dropout=0.0,
-                normalisation="ln",
-                input_norm=self.norm,
-            )
-        elif self.he_feat_type == "cp_decomp":
-            self.cp_W = MLP(
-                in_channels=hidden_channels + 1,
-                hidden_channels=hidden_channels,
-                out_channels=hidden_channels,
-                num_layers=1,
-                dropout=0.0,
-                normalisation="ln",
-                input_norm=self.norm,
-            )
-            self.cp_V = MLP(
-                in_channels=hidden_channels,
-                hidden_channels=hidden_channels,
-                out_channels=hidden_channels,
-                num_layers=1,
-                dropout=0.0,
-                normalisation="ln",
-                input_norm=hidden_channels,
-            )
+        # if self.he_feat_type == "var3":
+        #     self.sheaf_phi = MLP(
+        #         in_channels=self.MLP_hidden,
+        #         hidden_channels=hidden_channels,
+        #         out_channels=hidden_channels,
+        #         num_layers=1,
+        #         dropout=0.0,
+        #         normalisation="ln",
+        #         input_norm=self.norm,
+        #     )
+        # elif self.he_feat_type == "cp_decomp":
+        #     self.cp_W = MLP(
+        #         in_channels=hidden_channels + 1,
+        #         hidden_channels=hidden_channels,
+        #         out_channels=hidden_channels,
+        #         num_layers=1,
+        #         dropout=0.0,
+        #         normalisation="ln",
+        #         input_norm=self.norm,
+        #     )
+        #     self.cp_V = MLP(
+        #         in_channels=hidden_channels,
+        #         hidden_channels=hidden_channels,
+        #         out_channels=hidden_channels,
+        #         num_layers=1,
+        #         dropout=0.0,
+        #         normalisation="ln",
+        #         input_norm=hidden_channels,
+        #     )
 
         self.sheaf_lin = MLP(
             in_channels=2 * self.MLP_hidden,
@@ -125,15 +126,7 @@ class SheafBuilder(nn.Module):
             ])
 
     def compute_node_hyperedge_features(self, x, e, hyperedge_index):
-        if self.he_feat_type == 'var1':
-            return compute_hyperedge_features_var1(x, e, hyperedge_index)
-        elif self.he_feat_type == 'var2':
-            return compute_hyperedge_features_var2(x, hyperedge_index)
-        elif self.he_feat_type == 'var3':
-            return compute_hyperedge_features_var3(x, hyperedge_index, self.sheaf_phi)
-        elif self.he_feat_type == 'cp_decomp':
-            return compute_hyperedge_index_cp_decomp(x, hyperedge_index, self.cp_W,
-                                                     self.cp_V)
+        return self.he_feat_builder(x, e, hyperedge_index)
 
     def predict_sheaf(self, xs, es, hyperedge_index, node_types, hyperedge_types):
         if self.prediction_type == "type_concat":
@@ -186,7 +179,7 @@ class SheafBuilderDiag(SheafBuilder):
             sheaf_act: str = "sigmoid",
             num_node_types: int = 3,
             num_edge_types: int = 6,
-            he_feat_type: str = 'var1',
+            he_feat_builder: Optional[BaseHeFeatBuilder] = None,
             **_kwargs,
     ):
         super(SheafBuilderDiag, self).__init__(
@@ -200,7 +193,7 @@ class SheafBuilderDiag(SheafBuilder):
             sheaf_act=sheaf_act,
             num_node_types=num_node_types,
             num_edge_types=num_edge_types,
-            he_feat_type=he_feat_type
+            he_feat_builder=he_feat_builder
         )
 
     def reset_parameters(self):
@@ -266,7 +259,7 @@ class SheafBuilderGeneral(SheafBuilder):
             sheaf_act: str = "sigmoid",
             num_node_types: int = 3,
             num_edge_types: int = 6,
-            he_feat_type: str = 'var1',
+            he_feat_builder: Optional[BaseHeFeatBuilder] = None,
             **_kwargs
     ):
         super(SheafBuilderGeneral, self).__init__(
@@ -281,7 +274,7 @@ class SheafBuilderGeneral(SheafBuilder):
             num_node_types=num_node_types,
             num_edge_types=num_edge_types,
             sheaf_out_channels=stalk_dimension * stalk_dimension,
-            he_feat_type=he_feat_type
+            he_feat_builder=he_feat_builder
         )
         self.norm_type = sheaf_normtype
 
@@ -344,7 +337,7 @@ class SheafBuilderOrtho(SheafBuilder):
             sheaf_act: str = "sigmoid",
             num_node_types: int = 3,
             num_edge_types: int = 6,
-            he_feat_type: str = 'var1',
+            he_feat_builder: Optional[BaseHeFeatBuilder] = None,
             **_kwargs,
     ):
         super(SheafBuilderOrtho, self).__init__(
@@ -359,7 +352,7 @@ class SheafBuilderOrtho(SheafBuilder):
             num_node_types=num_node_types,
             num_edge_types=num_edge_types,
             sheaf_out_channels=stalk_dimension * (stalk_dimension - 1) // 2,
-            he_feat_type=he_feat_type
+            he_feat_builder=he_feat_builder
         )
 
         self.orth_transform = Orthogonal(
@@ -443,7 +436,7 @@ class SheafBuilderLowRank(SheafBuilder):
             rank: int = 2,
             num_node_types: int = 4,
             num_edge_types: int = 6,
-            he_feat_type: str = 'var1',
+            he_feat_builder: Optional[BaseHeFeatBuilder] = None,
             **_kwargs,
     ):
         super(SheafBuilderLowRank, self).__init__(
@@ -458,7 +451,7 @@ class SheafBuilderLowRank(SheafBuilder):
             num_node_types=num_node_types,
             num_edge_types=num_edge_types,
             sheaf_out_channels=2 * stalk_dimension * rank + stalk_dimension,
-            he_feat_type=he_feat_type
+            he_feat_builder=he_feat_builder
         )
         self.rank = rank  # rank for the block matrices
         self.norm_type = sheaf_normtype

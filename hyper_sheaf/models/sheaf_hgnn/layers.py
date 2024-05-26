@@ -19,7 +19,7 @@ from torch_geometric.nn.inits import zeros
 from torch_scatter import scatter_add
 
 from hyper_sheaf.utils import utils
-from ..mlp import MLP
+from hyper_sheaf.utils.mlp import MLP
 
 
 def normalisation_matrices(

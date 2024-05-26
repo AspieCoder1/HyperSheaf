@@ -7,7 +7,8 @@ from torch.nn import functional as F
 from torch_geometric.nn import Linear
 from torch_scatter import scatter_mean, scatter_add
 
-from hyper_sheaf.models.mlp import MLP
+from hyper_sheaf.feature_builders import BaseHeFeatBuilder
+from hyper_sheaf.utils.mlp import MLP
 from hyper_sheaf.models.sheaf_hgcn.hgcn_sheaf_laplacians import (SheafLaplacianDiag,
                                                                  SheafLaplacianOrtho,
                                                                  SheafLaplacianGeneral, )
@@ -42,13 +43,13 @@ class SheafHyperGCN(nn.Module):
         residual_connections: bool = False,
         use_lin2: bool = False,
         sheaf_special_head: bool = False,
-            sheaf_pred_block: Literal[
+        sheaf_pred_block: Literal[
                 'local_concat', 'type_concat', 'type_ensemble'] = "local_concat",
-            he_feat_type: Literal['var1', 'var2', 'var3', 'cp_decomp'] = 'var1',
+        he_feat_type: Literal['var1', 'var2', 'var3', 'cp_decomp'] = 'var1',
         sheaf_dropout: bool = False,
-            rank: int = 2,
-            num_node_types: int = 6,
-            num_hyperedge_types: int = 3,
+        rank: int = 2,
+        num_node_types: int = 6,
+        num_hyperedge_types: int = 3,
         mediators: bool = False,
         **_kwargs,
     ):

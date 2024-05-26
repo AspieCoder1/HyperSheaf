@@ -9,7 +9,7 @@
 """
 This script contains all models in our paper.
 """
-from typing import Literal
+from typing import Literal, Optional
 
 import torch.nn.functional as F
 from torch import nn
@@ -24,7 +24,8 @@ from .sheaf_builder import (
     SheafBuilderGeneral,
     SheafBuilderLowRank,
 )
-from ..mlp import MLP
+from hyper_sheaf.utils.mlp import MLP
+from hyper_sheaf.feature_builders import BaseHeFeatBuilder
 
 
 class SheafHyperGNN(nn.Module):
@@ -39,6 +40,7 @@ class SheafHyperGNN(nn.Module):
             self,
             in_channels: int,
             out_channels: int,
+            he_feature_builder: BaseHeFeatBuilder,
             hidden_channels: int = 64,
             sheaf_type: str = "DiagSheafs",
             stalk_dimension: int = 6,
@@ -58,7 +60,6 @@ class SheafHyperGNN(nn.Module):
             sheaf_special_head: bool = False,
             sheaf_learner: Literal[
                 'local_concat', 'type_concat', 'type_ensemble'] = "local_concat",
-            he_feature_builder: Literal['var1', 'var2', 'var3', 'cp_decomp'] = 'var1',
             sheaf_dropout: bool = False,
             rank: int = 2,
             is_vshae: bool = False,
@@ -87,7 +88,7 @@ class SheafHyperGNN(nn.Module):
         )
         self.residual = residual_connections
         self.is_vshae = is_vshae
-        self.he_feat_type = he_feature_builder
+        self.he_feat_builder = he_feature_builder
         self.pred_block = sheaf_learner
 
         self.hyperedge_attr = None
@@ -148,7 +149,7 @@ class SheafHyperGNN(nn.Module):
                 sheaf_pred_block=sheaf_learner,
                 sheaf_dropout=sheaf_dropout,
                 sheaf_normtype=self.norm,
-                he_feat_type=he_feature_builder,
+                he_feat_builder=he_feature_builder,
                 num_edge_types=num_hyperedge_types,
                 num_node_types=num_node_types
             )
@@ -202,7 +203,7 @@ class SheafHyperGNN(nn.Module):
                         sheaf_dropout=sheaf_dropout,
                         sheaf_normtype=self.norm,
                         rank=rank,
-                        he_feat_type=he_feature_builder,
+                        he_feat_builder=he_feature_builder,
                         num_edge_types=num_hyperedge_types,
                         num_node_types=num_node_types
                     )

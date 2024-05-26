@@ -1,8 +1,9 @@
 import torch
-from torch_geometric.data import Data
 
+from hyper_sheaf.data import HeteroHypergraph
 from hyper_sheaf.models.sheaf_hgcn.models import SheafHyperGCN
 from hyper_sheaf.models.sheaf_hgnn.models import SheafHyperGNN
+from hyper_sheaf.feature_builders.base_features import InputFeatsHeFeatBuilder
 
 if __name__ == '__main__':
     device = torch.device('cpu')
@@ -17,24 +18,25 @@ if __name__ == '__main__':
     labels = torch.randint(0, 5, (num_nodes,))
     hyperedge_types = torch.randint(0, num_hyperedge_types, (3,))
     node_types = torch.randint(0, num_node_types, (num_nodes,))
-    data = Data(
+    data = HeteroHypergraph(
         x=features,
-        edge_index=edge_index,
+        hyperedge_index=edge_index,
         y=labels,
         node_types=node_types,
         hyperedge_types=hyperedge_types,
-        num_hyperedges=3,
-        n_x=num_nodes
     ).to(device)
+
+    feat_builder = InputFeatsHeFeatBuilder()
+
 
     model = SheafHyperGNN(
         in_channels=64,
         out_channels=5,
         use_lin2=True,
-        he_feature_builder='var1',
+        he_feature_builder=feat_builder,
         sheaf_learner='type_concat',
-        num_node_types=num_node_types,
-        num_hyperedge_types=num_hyperedge_types
+        num_node_types=data.num_node_types,
+        num_hyperedge_types=data.num_hyperedge_types
     ).to(device)
 
     out = model(data)
@@ -47,8 +49,8 @@ if __name__ == '__main__':
         use_lin2=True,
         he_feat_type='var1',
         sheaf_pred_block='type_concat',
-        num_node_types=num_node_types,
-        num_hyperedge_types=num_hyperedge_types
+        num_node_types=data.num_node_types,
+        num_hyperedge_types=data.num_hyperedge_types
     ).to(device)
 
     out = model(data)

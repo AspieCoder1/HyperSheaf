@@ -4,22 +4,25 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
+from hyper_sheaf.feature_builders.cp_decomp import CPDecompHeFeatBuilder
+from hyper_sheaf.feature_builders.neighbour_aggregation import EquivariantHeFeatBuilder, NodeMeanHeFeatBuilder
+from hyper_sheaf.feature_builders.base_features import InputFeatsHeFeatBuilder
 from hyper_sheaf.hyperedge_feature_builders import (
     compute_hyperedge_features_var1,
     compute_hyperedge_features_var2,
     compute_hyperedge_features_var3,
     compute_hyperedge_index_cp_decomp,
 )
-from hyper_sheaf.models.mlp import MLP
 from hyper_sheaf.sheaf_learners import (
     predict_block_local_concat,
     predict_block_type_concat,
     predict_block_type_ensemble,
 )
+from hyper_sheaf.utils.mlp import MLP
 from hyper_sheaf.utils.orthogonal import Orthogonal
 
 
-class HGNCSheafBuilder(nn.Module):
+class HGCNSheafBuilder(nn.Module):
     def __init__(
             self,
             stalk_dimension: int,
@@ -35,7 +38,7 @@ class HGNCSheafBuilder(nn.Module):
             sheaf_out_channels: Optional[int] = None,
             he_feat_type: str = 'var1'
     ):
-        super(HGNCSheafBuilder, self).__init__()
+        super(HGCNSheafBuilder, self).__init__()
         self.prediction_type = (
             sheaf_pred_block  # pick the way hyperedge feartures are computed
         )
@@ -55,6 +58,9 @@ class HGNCSheafBuilder(nn.Module):
             self.sheaf_out_channels = sheaf_out_channels
 
         if self.he_feat_type == "var3":
+            self.he_feat_builder = EquivariantHeFeatBuilder(
+                num_node_feats=self.MLP_hidden, out_channels=hidden_channels,
+                hidden_channels=hidden_channels, input_norm=self.norm)
             self.sheaf_phi = MLP(
                 in_channels=self.MLP_hidden,
                 hidden_channels=hidden_channels,
@@ -65,24 +71,31 @@ class HGNCSheafBuilder(nn.Module):
                 input_norm=self.norm,
             )
         elif self.he_feat_type == "cp_decomp":
-            self.cp_W = MLP(
-                in_channels=hidden_channels + 1,
-                hidden_channels=hidden_channels,
-                out_channels=hidden_channels,
-                num_layers=1,
-                dropout=0.0,
-                normalisation="ln",
-                input_norm=self.norm,
-            )
-            self.cp_V = MLP(
-                in_channels=hidden_channels,
-                hidden_channels=hidden_channels,
-                out_channels=hidden_channels,
-                num_layers=1,
-                dropout=0.0,
-                normalisation="ln",
-                input_norm=hidden_channels,
-            )
+            self.he_feat_builder = CPDecompHeFeatBuilder(
+                hidden_channels=hidden_channels, input_norm=self.norm)
+            # self.cp_W = MLP(
+            #     in_channels=hidden_channels + 1,
+            #     hidden_channels=hidden_channels,
+            #     out_channels=hidden_channels,
+            #     num_layers=1,
+            #     dropout=0.0,
+            #     normalisation="ln",
+            #     input_norm=self.norm,
+            # )
+            # self.cp_V = MLP(
+            #     in_channels=hidden_channels,
+            #     hidden_channels=hidden_channels,
+            #     out_channels=hidden_channels,
+            #     num_layers=1,
+            #     dropout=0.0,
+            #     normalisation="ln",
+            #     input_norm=hidden_channels,
+            # )
+        elif self.he_feat_type == "var2":
+            self.he_feat_builder = NodeMeanHeFeatBuilder()
+        else:
+            self.he_feat_builder =  InputFeatsHeFeatBuilder()
+
 
         self.sheaf_lin = MLP(
             in_channels=2 * self.MLP_hidden,
@@ -118,15 +131,7 @@ class HGNCSheafBuilder(nn.Module):
             ])
 
     def compute_node_hyperedge_features(self, x, e, hyperedge_index):
-        if self.he_feat_type == 'var1':
-            return compute_hyperedge_features_var1(x, e, hyperedge_index)
-        elif self.he_feat_type == 'var2':
-            return compute_hyperedge_features_var2(x, hyperedge_index)
-        elif self.he_feat_type == 'var3':
-            return compute_hyperedge_features_var3(x, hyperedge_index, self.sheaf_phi)
-        elif self.he_feat_type == 'cp_decomp':
-            return compute_hyperedge_index_cp_decomp(x, hyperedge_index, self.cp_W,
-                                                     self.cp_V)
+        return self.he_feat_builder(x, e, hyperedge_index)
 
     def predict_sheaf(self, xs, es, hyperedge_index, node_types, hyperedge_types):
         if self.prediction_type == "type_concat":
@@ -148,7 +153,7 @@ class HGNCSheafBuilder(nn.Module):
         )
 
 
-class HGCNSheafBuilderDiag(HGNCSheafBuilder):
+class HGCNSheafBuilderDiag(HGCNSheafBuilder):
     def __init__(
             self,
             stalk_dimension: int,
@@ -217,7 +222,7 @@ class HGCNSheafBuilderDiag(HGNCSheafBuilder):
         return h_sheaf
 
 
-class HGCNSheafBuilderGeneral(HGNCSheafBuilder):
+class HGCNSheafBuilderGeneral(HGCNSheafBuilder):
     def __init__(
             self,
             stalk_dimension: int,
@@ -283,7 +288,7 @@ class HGCNSheafBuilderGeneral(HGNCSheafBuilder):
         return h_sheaf
 
 
-class HGCNSheafBuilderOrtho(HGNCSheafBuilder):
+class HGCNSheafBuilderOrtho(HGCNSheafBuilder):
     def __init__(
             self,
             stalk_dimension: int,

@@ -42,4 +42,4 @@ def compute_hyperedge_index_cp_decomp(x, hyperedge_index, cp_W, cp_V):
     e = e + torch.relu(scatter_add(x[row], col, dim=0))
     es = torch.index_select(e, dim=0, index=col)
 
-    return es, xs
+    return xs, es
