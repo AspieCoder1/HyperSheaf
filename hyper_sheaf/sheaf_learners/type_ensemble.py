@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 from hyper_sheaf.utils.mlp import MLP
 from .core import HeteroSheafLearner
@@ -10,7 +9,7 @@ class TypeEnsembleSheafLearner(HeteroSheafLearner):
     def __init__(self, node_feats: int, out_channels: int, num_he_types,
                  hidden_channels: int = 64,
                  norm: bool = True, act_fn: str = 'relu'):
-        super(TypeEnsembleSheafLearner, self).__init__()
+        super(TypeEnsembleSheafLearner, self).__init__(act_fn=act_fn)
         self.type_layers = nn.ModuleList([
             MLP(
                 in_channels=2 * node_feats,
@@ -23,8 +22,6 @@ class TypeEnsembleSheafLearner(HeteroSheafLearner):
             )
             for _ in range(num_he_types)
         ])
-
-        self.act_fn = act_fn
 
     def predict_sheaf(self, node_feats, he_feats, he_index, node_types, he_types):
         node, hyperedge = he_index
@@ -46,13 +43,4 @@ class TypeEnsembleSheafLearner(HeteroSheafLearner):
         stacked_maps = torch.row_stack(results)
         h_sheaf = torch.empty(stacked_maps.shape, device=stacked_maps.device)
         h_sheaf[hyperedge_type_idx] = stacked_maps
-
-        if self.act_fn == 'relu':
-            return F.relu(h_sheaf)
-        if self.act_fn == 'sigmoid':
-            return F.sigmoid(h_sheaf)
-        if self.act_fn == 'tanh':
-            return F.tanh(h_sheaf)
-        if self.act_fn == 'elu':
-            return F.elu(h_sheaf)
         return h_sheaf
