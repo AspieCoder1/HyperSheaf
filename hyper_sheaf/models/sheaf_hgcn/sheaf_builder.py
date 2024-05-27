@@ -5,19 +5,10 @@ from torch import nn
 from torch.nn import functional as F
 
 from hyper_sheaf.feature_builders.cp_decomp import CPDecompHeFeatBuilder
-from hyper_sheaf.feature_builders.neighbour_aggregation import EquivariantHeFeatBuilder, NodeMeanHeFeatBuilder
 from hyper_sheaf.feature_builders.input_feats import InputFeatsHeFeatBuilder
-from hyper_sheaf.hyperedge_feature_builders import (
-    compute_hyperedge_features_var1,
-    compute_hyperedge_features_var2,
-    compute_hyperedge_features_var3,
-    compute_hyperedge_index_cp_decomp,
-)
-from hyper_sheaf.sheaf_learners import (
-    predict_block_local_concat,
-    predict_block_type_concat,
-    predict_block_type_ensemble,
-)
+from hyper_sheaf.feature_builders.neighbour_aggregation import (
+    EquivariantHeFeatBuilder,
+    NodeMeanHeFeatBuilder, )
 from hyper_sheaf.sheaf_learners.local_concat import LocalConcatSheafLearner
 from hyper_sheaf.sheaf_learners.type_concat import TypeConcatSheafLearner
 from hyper_sheaf.sheaf_learners.type_ensemble import TypeEnsembleSheafLearner
@@ -76,24 +67,6 @@ class HGCNSheafBuilder(nn.Module):
         elif self.he_feat_type == "cp_decomp":
             self.he_feat_builder = CPDecompHeFeatBuilder(
                 hidden_channels=hidden_channels, input_norm=self.norm)
-            # self.cp_W = MLP(
-            #     in_channels=hidden_channels + 1,
-            #     hidden_channels=hidden_channels,
-            #     out_channels=hidden_channels,
-            #     num_layers=1,
-            #     dropout=0.0,
-            #     normalisation="ln",
-            #     input_norm=self.norm,
-            # )
-            # self.cp_V = MLP(
-            #     in_channels=hidden_channels,
-            #     hidden_channels=hidden_channels,
-            #     out_channels=hidden_channels,
-            #     num_layers=1,
-            #     dropout=0.0,
-            #     normalisation="ln",
-            #     input_norm=hidden_channels,
-            # )
         elif self.he_feat_type == "var2":
             self.he_feat_builder = NodeMeanHeFeatBuilder()
         else:
