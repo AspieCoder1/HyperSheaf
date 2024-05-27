@@ -1,9 +1,9 @@
 import torch
 
 from hyper_sheaf.data import HeteroHypergraph
+from hyper_sheaf.feature_builders.input_feats import InputFeatsHeFeatBuilder
 from hyper_sheaf.models.sheaf_hgcn.models import SheafHyperGCN
 from hyper_sheaf.models.sheaf_hgnn.models import SheafHyperGNN
-from hyper_sheaf.feature_builders.base_features import InputFeatsHeFeatBuilder
 
 if __name__ == '__main__':
     device = torch.device('cpu')
@@ -34,9 +34,10 @@ if __name__ == '__main__':
         out_channels=5,
         use_lin2=True,
         he_feature_builder=feat_builder,
-        sheaf_learner='type_concat',
+        sheaf_learner='type_ensemble',
         num_node_types=data.num_node_types,
-        num_hyperedge_types=data.num_hyperedge_types
+        num_hyperedge_types=data.num_hyperedge_types,
+        dynamic_sheaf=False,
     ).to(device)
 
     out = model(data)

@@ -6,7 +6,7 @@ from torch.nn import functional as F
 
 from hyper_sheaf.feature_builders.cp_decomp import CPDecompHeFeatBuilder
 from hyper_sheaf.feature_builders.neighbour_aggregation import EquivariantHeFeatBuilder, NodeMeanHeFeatBuilder
-from hyper_sheaf.feature_builders.base_features import InputFeatsHeFeatBuilder
+from hyper_sheaf.feature_builders.input_feats import InputFeatsHeFeatBuilder
 from hyper_sheaf.hyperedge_feature_builders import (
     compute_hyperedge_features_var1,
     compute_hyperedge_features_var2,
@@ -18,6 +18,9 @@ from hyper_sheaf.sheaf_learners import (
     predict_block_type_concat,
     predict_block_type_ensemble,
 )
+from hyper_sheaf.sheaf_learners.local_concat import LocalConcatSheafLearner
+from hyper_sheaf.sheaf_learners.type_concat import TypeConcatSheafLearner
+from hyper_sheaf.sheaf_learners.type_ensemble import TypeEnsembleSheafLearner
 from hyper_sheaf.utils.mlp import MLP
 from hyper_sheaf.utils.orthogonal import Orthogonal
 
@@ -94,63 +97,40 @@ class HGCNSheafBuilder(nn.Module):
         elif self.he_feat_type == "var2":
             self.he_feat_builder = NodeMeanHeFeatBuilder()
         else:
-            self.he_feat_builder =  InputFeatsHeFeatBuilder()
+            self.he_feat_builder = InputFeatsHeFeatBuilder()
 
-
-        self.sheaf_lin = MLP(
-            in_channels=2 * self.MLP_hidden,
-            hidden_channels=hidden_channels,
-            out_channels=self.sheaf_out_channels,
-            num_layers=1,
-            dropout=0.0,
-            normalisation="ln",
-            input_norm=self.norm,
-        )
-
-        if self.prediction_type == "type_concat":
-            self.sheaf_lin = MLP(
-                in_channels=2 * self.MLP_hidden + num_node_types + num_edge_types,
+        if self.prediction_type == 'local_concat':
+            self.sheaf_predictor = LocalConcatSheafLearner(
+                node_feats=self.MLP_hidden,
                 hidden_channels=hidden_channels,
                 out_channels=self.sheaf_out_channels,
-                num_layers=1,
-                dropout=0.0,
-                normalisation="ln",
-                input_norm=self.norm, )
+                norm=self.norm,
+                act_fn=sheaf_act
+            )
+        elif self.prediction_type == "type_concat":
+            self.sheaf_predictor = TypeConcatSheafLearner(
+                node_feats=self.MLP_hidden,
+                hidden_channels=hidden_channels,
+                out_channels=self.sheaf_out_channels,
+                num_node_types=num_node_types,
+                num_he_types=num_edge_types,
+                act_fn=sheaf_act,
+                norm=self.norm
+            )
         elif self.prediction_type == "type_ensemble":
-            self.type_layers = nn.ModuleList([
-                MLP(
-                    in_channels=2 * self.MLP_hidden,
-                    hidden_channels=hidden_channels,
-                    out_channels=self.sheaf_out_channels,
-                    num_layers=1,
-                    dropout=0.0,
-                    normalisation="ln",
-                    input_norm=self.norm,
-                )
-                for _ in range(num_edge_types)
-            ])
+            self.sheaf_predictor = TypeEnsembleSheafLearner(
+                node_feats=self.MLP_hidden,
+                hidden_channels=hidden_channels,
+                out_channels=self.sheaf_out_channels,
+                act_fn=sheaf_act,
+                num_he_types=num_edge_types
+            )
 
     def compute_node_hyperedge_features(self, x, e, hyperedge_index):
         return self.he_feat_builder(x, e, hyperedge_index)
 
     def predict_sheaf(self, xs, es, hyperedge_index, node_types, hyperedge_types):
-        if self.prediction_type == "type_concat":
-            return predict_block_type_concat(
-                xs, es, hyperedge_index, node_types, hyperedge_types, self.sheaf_lin,
-                self.sheaf_act
-            )
-        if self.prediction_type == "type_ensemble":
-            return predict_block_type_ensemble(
-                xs,
-                es,
-                hyperedge_index,
-                hyperedge_types,
-                self.type_layers,
-                self.sheaf_act
-            )
-        return predict_block_local_concat(
-            xs, es, self.sheaf_lin, self.sheaf_act
-        )
+        return self.sheaf_predictor(xs, es, hyperedge_index, node_types, hyperedge_types)
 
 
 class HGCNSheafBuilderDiag(HGCNSheafBuilder):
