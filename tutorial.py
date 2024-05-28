@@ -28,12 +28,11 @@ if __name__ == '__main__':
 
     feat_builder = InputFeatsHeFeatBuilder()
 
-
     model = SheafHyperGNN(
         in_channels=64,
         out_channels=5,
         use_lin2=True,
-        he_feature_builder=feat_builder,
+        he_feat_type='var1',
         sheaf_learner='type_ensemble',
         num_node_types=data.num_node_types,
         num_hyperedge_types=data.num_hyperedge_types,

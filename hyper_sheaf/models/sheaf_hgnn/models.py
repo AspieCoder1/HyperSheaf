@@ -9,13 +9,14 @@
 """
 This script contains all models in our paper.
 """
-from typing import Literal, Optional
+from typing import Literal
 
 import torch.nn.functional as F
 from torch import nn
 from torch_geometric.nn.dense import Linear
 from torch_scatter import scatter_mean
 
+from hyper_sheaf.utils.mlp import MLP
 #  This part is for HyperGCN
 from .layers import *
 from .sheaf_builder import (
@@ -24,8 +25,6 @@ from .sheaf_builder import (
     SheafBuilderGeneral,
     SheafBuilderLowRank,
 )
-from hyper_sheaf.utils.mlp import MLP
-from hyper_sheaf.feature_builders import BaseHeFeatBuilder
 
 
 class SheafHyperGNN(nn.Module):
@@ -40,7 +39,6 @@ class SheafHyperGNN(nn.Module):
             self,
             in_channels: int,
             out_channels: int,
-            he_feature_builder: BaseHeFeatBuilder,
             hidden_channels: int = 64,
             sheaf_type: str = "DiagSheafs",
             stalk_dimension: int = 6,
@@ -60,6 +58,7 @@ class SheafHyperGNN(nn.Module):
             sheaf_special_head: bool = False,
             sheaf_learner: Literal[
                 'local_concat', 'type_concat', 'type_ensemble'] = "local_concat",
+            he_feat_type: Literal['var1', 'var2', 'var3', 'cp_decomp'] = 'var1',
             sheaf_dropout: bool = False,
             rank: int = 2,
             is_vshae: bool = False,
@@ -88,7 +87,7 @@ class SheafHyperGNN(nn.Module):
         )
         self.residual = residual_connections
         self.is_vshae = is_vshae
-        self.he_feat_builder = he_feature_builder
+        self.he_feat_type = he_feat_type
         self.pred_block = sheaf_learner
 
         self.hyperedge_attr = None
@@ -149,7 +148,7 @@ class SheafHyperGNN(nn.Module):
                 sheaf_pred_block=sheaf_learner,
                 sheaf_dropout=sheaf_dropout,
                 sheaf_normtype=self.norm,
-                he_feat_builder=he_feature_builder,
+                he_feat_type=he_feat_type,
                 num_edge_types=num_hyperedge_types,
                 num_node_types=num_node_types
             )

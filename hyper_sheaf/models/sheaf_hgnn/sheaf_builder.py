@@ -7,17 +7,15 @@ import torch.nn.functional as F
 from torch import nn
 from torch_scatter import scatter_add
 
-from hyper_sheaf.feature_builders import BaseHeFeatBuilder
-from hyper_sheaf.sheaf_learners import (
-    predict_block_local_concat,
-    predict_block_type_concat,
-    predict_block_type_ensemble,
-)
+from hyper_sheaf.feature_builders.cp_decomp import CPDecompHeFeatBuilder
+from hyper_sheaf.feature_builders.input_feats import InputFeatsHeFeatBuilder
+from hyper_sheaf.feature_builders.neighbour_aggregation import (
+    EquivariantHeFeatBuilder,
+    NodeMeanHeFeatBuilder, )
 from hyper_sheaf.sheaf_learners.local_concat import LocalConcatSheafLearner
 from hyper_sheaf.sheaf_learners.type_concat import TypeConcatSheafLearner
 from hyper_sheaf.sheaf_learners.type_ensemble import TypeEnsembleSheafLearner
 from hyper_sheaf.utils import utils
-from hyper_sheaf.utils.mlp import MLP
 from hyper_sheaf.utils.orthogonal import Orthogonal
 
 
@@ -38,7 +36,7 @@ class SheafBuilder(nn.Module):
             num_node_types: int = 3,
             num_edge_types: int = 6,
             sheaf_out_channels: Optional[int] = None,
-            he_feat_builder: Optional[BaseHeFeatBuilder] = None
+            he_feat_type: str = 'var1',
     ):
         super(SheafBuilder, self).__init__()
         self.prediction_type = (
@@ -53,11 +51,23 @@ class SheafBuilder(nn.Module):
         self.sheaf_act = sheaf_act
         self.num_node_types = num_node_types
         self.num_edge_types = num_edge_types
-        self.he_feat_builder = he_feat_builder
+        self.he_feat_type = he_feat_type
         if sheaf_out_channels is None:
             self.sheaf_out_channels = stalk_dimension
         else:
             self.sheaf_out_channels = sheaf_out_channels
+
+        if self.he_feat_type == "var3":
+            self.he_feat_builder = EquivariantHeFeatBuilder(
+                num_node_feats=self.MLP_hidden, out_channels=hidden_channels,
+                hidden_channels=hidden_channels, input_norm=self.norm)
+        elif self.he_feat_type == "cp_decomp":
+            self.he_feat_builder = CPDecompHeFeatBuilder(
+                hidden_channels=hidden_channels, input_norm=self.norm)
+        elif self.he_feat_type == "var2":
+            self.he_feat_builder = NodeMeanHeFeatBuilder()
+        else:
+            self.he_feat_builder = InputFeatsHeFeatBuilder()
 
         if self.prediction_type == 'local_concat':
             self.sheaf_predictor = LocalConcatSheafLearner(
@@ -91,23 +101,6 @@ class SheafBuilder(nn.Module):
 
     def predict_sheaf(self, xs, es, hyperedge_index, node_types, hyperedge_types):
         return self.sheaf_predictor(xs, es, hyperedge_index, node_types, hyperedge_types)
-        # if self.prediction_type == "type_concat":
-        #     return predict_block_type_concat(
-        #         xs, es, hyperedge_index, node_types, hyperedge_types, self.sheaf_lin,
-        #         self.sheaf_act
-        #     )
-        # if self.prediction_type == "type_ensemble":
-        #     return predict_block_type_ensemble(
-        #         xs,
-        #         es,
-        #         hyperedge_index,
-        #         hyperedge_types,
-        #         self.type_layers,
-        #         self.sheaf_act
-        #     )
-        # return predict_block_local_concat(
-        #     xs, es, self.sheaf_lin, self.sheaf_act
-        # )
 
     @abc.abstractmethod
     def compute_restriction_maps(self, x, e, hyperedge_index, h_sheaf):
@@ -141,7 +134,7 @@ class SheafBuilderDiag(SheafBuilder):
             sheaf_act: str = "sigmoid",
             num_node_types: int = 3,
             num_edge_types: int = 6,
-            he_feat_builder: Optional[BaseHeFeatBuilder] = None,
+            he_feat_type: str = 'var1',
             **_kwargs,
     ):
         super(SheafBuilderDiag, self).__init__(
@@ -155,7 +148,7 @@ class SheafBuilderDiag(SheafBuilder):
             sheaf_act=sheaf_act,
             num_node_types=num_node_types,
             num_edge_types=num_edge_types,
-            he_feat_builder=he_feat_builder
+            he_feat_type=he_feat_type,
         )
 
     def reset_parameters(self):
@@ -221,7 +214,7 @@ class SheafBuilderGeneral(SheafBuilder):
             sheaf_act: str = "sigmoid",
             num_node_types: int = 3,
             num_edge_types: int = 6,
-            he_feat_builder: Optional[BaseHeFeatBuilder] = None,
+            he_feat_type: str = 'var1',
             **_kwargs
     ):
         super(SheafBuilderGeneral, self).__init__(
@@ -236,7 +229,7 @@ class SheafBuilderGeneral(SheafBuilder):
             num_node_types=num_node_types,
             num_edge_types=num_edge_types,
             sheaf_out_channels=stalk_dimension * stalk_dimension,
-            he_feat_builder=he_feat_builder
+            he_feat_type=he_feat_type
         )
         self.norm_type = sheaf_normtype
 
@@ -299,7 +292,7 @@ class SheafBuilderOrtho(SheafBuilder):
             sheaf_act: str = "sigmoid",
             num_node_types: int = 3,
             num_edge_types: int = 6,
-            he_feat_builder: Optional[BaseHeFeatBuilder] = None,
+            he_feat_type: str = 'var1',
             **_kwargs,
     ):
         super(SheafBuilderOrtho, self).__init__(
@@ -314,7 +307,7 @@ class SheafBuilderOrtho(SheafBuilder):
             num_node_types=num_node_types,
             num_edge_types=num_edge_types,
             sheaf_out_channels=stalk_dimension * (stalk_dimension - 1) // 2,
-            he_feat_builder=he_feat_builder
+            he_feat_type=he_feat_type
         )
 
         self.orth_transform = Orthogonal(
@@ -398,7 +391,7 @@ class SheafBuilderLowRank(SheafBuilder):
             rank: int = 2,
             num_node_types: int = 4,
             num_edge_types: int = 6,
-            he_feat_builder: Optional[BaseHeFeatBuilder] = None,
+            he_feat_type: str = 'var1',
             **_kwargs,
     ):
         super(SheafBuilderLowRank, self).__init__(
@@ -413,7 +406,7 @@ class SheafBuilderLowRank(SheafBuilder):
             num_node_types=num_node_types,
             num_edge_types=num_edge_types,
             sheaf_out_channels=2 * stalk_dimension * rank + stalk_dimension,
-            he_feat_builder=he_feat_builder
+            he_feat_type=he_feat_type
         )
         self.rank = rank  # rank for the block matrices
         self.norm_type = sheaf_normtype

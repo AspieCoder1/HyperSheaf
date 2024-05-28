@@ -55,15 +55,6 @@ class HGCNSheafBuilder(nn.Module):
             self.he_feat_builder = EquivariantHeFeatBuilder(
                 num_node_feats=self.MLP_hidden, out_channels=hidden_channels,
                 hidden_channels=hidden_channels, input_norm=self.norm)
-            self.sheaf_phi = MLP(
-                in_channels=self.MLP_hidden,
-                hidden_channels=hidden_channels,
-                out_channels=hidden_channels,
-                num_layers=1,
-                dropout=0.0,
-                normalisation="ln",
-                input_norm=self.norm,
-            )
         elif self.he_feat_type == "cp_decomp":
             self.he_feat_builder = CPDecompHeFeatBuilder(
                 hidden_channels=hidden_channels, input_norm=self.norm)
