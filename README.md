@@ -84,6 +84,40 @@ class InputFeatsHeFeatBuilder(BaseHeFeatBuilder):
 
 ## Heterogeneous sheaf learners
 
+HyperSheaf provides a series of heterogeneous sheaf learners that demonstrate how type
+information may be included in the restriction map prediction.
+Custom approaches may be implemented using the `HeteroSheafLearner` interface by implementing the 
+`predict_sheaf` method that takes in as input the node features, hyperedge features, hyperedge index, node types and hyperedge types.
+A simple learner that only concatenates the local features such as those used in the original _Neural Sheaf Diffusion_ paper is given below.
+
+```python
+import torch
+
+from hyper_sheaf.sheaf_learners.core import HeteroSheafLearner
+from hyper_sheaf.utils.mlp import MLP
+
+
+class LocalConcatSheafLearner(HeteroSheafLearner):
+    def __init__(self, node_feats: int, out_channels: int, hidden_channels: int = 64,
+                 norm: bool = True, act_fn: str = 'relu'):
+        super(LocalConcatSheafLearner, self).__init__(act_fn=act_fn)
+        self.lin = MLP(
+            in_channels=2 * node_feats,
+            out_channels=out_channels,
+            hidden_channels=hidden_channels,
+            num_layers=1,
+            dropout=0.0,
+            normalisation="ln",
+            input_norm=norm,
+        )
+
+    def predict_sheaf(self, node_feats, he_feats, he_index, node_types, he_types):
+        h_sheaf = torch.cat((node_feats, he_feats), dim=-1)
+        h_sheaf = self.lin(h_sheaf)
+        return h_sheaf
+
+```
+
 ## Supported model architectures
 
 - [x] SheafHyperGNN
