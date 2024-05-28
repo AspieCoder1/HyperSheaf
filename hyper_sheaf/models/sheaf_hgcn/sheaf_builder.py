@@ -12,7 +12,6 @@ from hyper_sheaf.feature_builders.neighbour_aggregation import (
 from hyper_sheaf.sheaf_learners.local_concat import LocalConcatSheafLearner
 from hyper_sheaf.sheaf_learners.type_concat import TypeConcatSheafLearner
 from hyper_sheaf.sheaf_learners.type_ensemble import TypeEnsembleSheafLearner
-from hyper_sheaf.utils.mlp import MLP
 from hyper_sheaf.utils.orthogonal import Orthogonal
 
 

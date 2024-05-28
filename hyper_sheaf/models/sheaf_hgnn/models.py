@@ -25,6 +25,7 @@ from .sheaf_builder import (
     SheafBuilderGeneral,
     SheafBuilderLowRank,
 )
+from ...data import HeteroHypergraph
 
 
 class SheafHyperGNN(nn.Module):
@@ -232,7 +233,7 @@ class SheafHyperGNN(nn.Module):
             hyperedge_attr = None
         return hyperedge_attr
 
-    def forward(self, data):
+    def forward(self, data: HeteroHypergraph):
         x = data.x
         edge_index = data.edge_index
         num_nodes = data.x.shape[0]  # data.edge_index[0].max().item() + 1

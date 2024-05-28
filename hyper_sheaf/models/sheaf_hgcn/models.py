@@ -7,8 +7,7 @@ from torch.nn import functional as F
 from torch_geometric.nn import Linear
 from torch_scatter import scatter_mean, scatter_add
 
-from hyper_sheaf.feature_builders import BaseHeFeatBuilder
-from hyper_sheaf.utils.mlp import MLP
+from hyper_sheaf.data import HeteroHypergraph
 from hyper_sheaf.models.sheaf_hgcn.hgcn_sheaf_laplacians import (SheafLaplacianDiag,
                                                                  SheafLaplacianOrtho,
                                                                  SheafLaplacianGeneral, )
@@ -17,6 +16,7 @@ from hyper_sheaf.models.sheaf_hgcn.sheaf_builder import (HGCNSheafBuilderDiag,
                                                          HGCNSheafBuilderGeneral,
                                                          HGCNSheafBuilderLowRank, )
 from hyper_sheaf.utils import utils
+from hyper_sheaf.utils.mlp import MLP
 
 
 class SheafHyperGCN(nn.Module):
@@ -315,7 +315,7 @@ class SheafHyperGCN(nn.Module):
                 A = A.to_dense().clamp(-1, 1).to_sparse()
         return A
 
-    def forward(self, data):
+    def forward(self, data: HeteroHypergraph):
         """
         an l-layer GCN
         """
