@@ -30,7 +30,7 @@ class SheafBuilder(nn.Module):
             dropout: float = 0.6,
             allset_input_norm: bool = True,
             sheaf_special_head: bool = False,
-            sheaf_pred_block: str = "local_concat",
+            sheaf_learner: str = "Sheaf-NSD",
             sheaf_dropout: bool = False,
             sheaf_act: str = "sigmoid",
             num_node_types: int = 3,
@@ -40,7 +40,7 @@ class SheafBuilder(nn.Module):
     ):
         super(SheafBuilder, self).__init__()
         self.prediction_type = (
-            sheaf_pred_block  # pick the way hyperedge feartures are computed
+            sheaf_learner  # pick the way hyperedge feartures are computed
         )
         self.sheaf_dropout = sheaf_dropout
         self.special_head = sheaf_special_head  # add a head having just 1 on the diagonal. this should be similar to the normal hypergraph conv
@@ -69,7 +69,7 @@ class SheafBuilder(nn.Module):
         else:
             self.he_feat_builder = InputFeatsHeFeatBuilder()
 
-        if self.prediction_type == 'local_concat':
+        if self.prediction_type == 'Sheaf-NSD':
             self.sheaf_predictor = LocalConcatSheafLearner(
                 node_feats=self.MLP_hidden,
                 hidden_channels=hidden_channels,
@@ -77,7 +77,7 @@ class SheafBuilder(nn.Module):
                 norm=self.norm,
                 act_fn=sheaf_act
             )
-        elif self.prediction_type == "type_concat":
+        elif self.prediction_type == "Sheaf-TE":
             self.sheaf_predictor = TypeConcatSheafLearner(
                 node_feats=self.MLP_hidden,
                 hidden_channels=hidden_channels,
@@ -87,7 +87,7 @@ class SheafBuilder(nn.Module):
                 act_fn=sheaf_act,
                 norm=self.norm
             )
-        elif self.prediction_type == "type_ensemble":
+        elif self.prediction_type == "Sheaf-ensemble":
             self.sheaf_predictor = TypeEnsembleSheafLearner(
                 node_feats=self.MLP_hidden,
                 hidden_channels=hidden_channels,
@@ -129,7 +129,7 @@ class SheafBuilderDiag(SheafBuilder):
             dropout: float = 0.6,
             allset_input_norm: bool = True,
             sheaf_special_head: bool = False,
-            sheaf_pred_block: str = 'local_concat',
+            sheaf_learner: str = 'Sheaf-NSD',
             sheaf_dropout: bool = False,
             sheaf_act: str = "sigmoid",
             num_node_types: int = 3,
@@ -142,7 +142,7 @@ class SheafBuilderDiag(SheafBuilder):
             hidden_channels=hidden_channels,
             dropout=dropout,
             allset_input_norm=allset_input_norm,
-            sheaf_pred_block=sheaf_pred_block,
+            sheaf_learner=sheaf_learner,
             sheaf_special_head=sheaf_special_head,
             sheaf_dropout=sheaf_dropout,
             sheaf_act=sheaf_act,
@@ -206,7 +206,7 @@ class SheafBuilderGeneral(SheafBuilder):
             dropout: float = 0.6,
             allset_input_norm: bool = True,
             sheaf_special_head: bool = False,
-            sheaf_pred_block: str = "local_concat",
+            sheaf_learner: str = "Sheaf-NSD",
             sheaf_dropout: bool = False,
             sheaf_normtype: Literal[
                 "degree_norm", "block_norm", "sym_degree_norm", "sym_block_norm"
@@ -222,7 +222,7 @@ class SheafBuilderGeneral(SheafBuilder):
             hidden_channels=hidden_channels,
             dropout=dropout,
             allset_input_norm=allset_input_norm,
-            sheaf_pred_block=sheaf_pred_block,
+            sheaf_learner=sheaf_learner,
             sheaf_special_head=sheaf_special_head,
             sheaf_dropout=sheaf_dropout,
             sheaf_act=sheaf_act,
@@ -287,7 +287,7 @@ class SheafBuilderOrtho(SheafBuilder):
             dropout: float = 0.6,
             allset_input_norm: bool = True,
             sheaf_special_head: bool = False,
-            sheaf_pred_block: str = "local_concat",
+            sheaf_learner: str = "Sheaf-NSD",
             sheaf_dropout: bool = False,
             sheaf_act: str = "sigmoid",
             num_node_types: int = 3,
@@ -300,7 +300,7 @@ class SheafBuilderOrtho(SheafBuilder):
             hidden_channels=hidden_channels,
             dropout=dropout,
             allset_input_norm=allset_input_norm,
-            sheaf_pred_block=sheaf_pred_block,
+            sheaf_learner=sheaf_learner,
             sheaf_special_head=sheaf_special_head,
             sheaf_dropout=sheaf_dropout,
             sheaf_act=sheaf_act,
@@ -384,7 +384,7 @@ class SheafBuilderLowRank(SheafBuilder):
             dropout: float = 0.6,
             allset_input_norm: bool = True,
             sheaf_special_head: bool = False,
-            sheaf_pred_block: str = "local_concat",
+            sheaf_learner: str = "Sheaf-NSD",
             sheaf_dropout: bool = False,
             sheaf_act: str = "sigmoid",
             sheaf_normtype: str = "degree_norm",
@@ -399,7 +399,7 @@ class SheafBuilderLowRank(SheafBuilder):
             hidden_channels=hidden_channels,
             dropout=dropout,
             allset_input_norm=allset_input_norm,
-            sheaf_pred_block=sheaf_pred_block,
+            sheaf_learner=sheaf_learner,
             sheaf_special_head=sheaf_special_head,
             sheaf_dropout=sheaf_dropout,
             sheaf_act=sheaf_act,

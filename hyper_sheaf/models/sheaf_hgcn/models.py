@@ -43,8 +43,8 @@ class SheafHyperGCN(nn.Module):
         residual_connections: bool = False,
         use_lin2: bool = False,
         sheaf_special_head: bool = False,
-        sheaf_pred_block: Literal[
-                'local_concat', 'type_concat', 'type_ensemble'] = "local_concat",
+        sheaf_learner: Literal[
+            'Sheaf-NSD', 'Sheaf-TE', 'Sheaf-ensemble'] = "Sheaf-NSD",
         he_feat_type: Literal['var1', 'var2', 'var3', 'cp_decomp'] = 'var1',
         sheaf_dropout: bool = False,
         rank: int = 2,
@@ -143,7 +143,7 @@ class SheafHyperGCN(nn.Module):
                 dropout=dropout,
                 allset_input_norm=allset_input_norm,
                 sheaf_special_head=sheaf_special_head,
-                sheaf_pred_block=sheaf_pred_block,
+                sheaf_learner=sheaf_learner,
                 sheaf_dropout=sheaf_dropout,
                 rank=rank,
                 he_feat_type=he_feat_type,
@@ -165,7 +165,7 @@ class SheafHyperGCN(nn.Module):
                         dropout=dropout,
                         allset_input_norm=allset_input_norm,
                         sheaf_special_head=sheaf_special_head,
-                        sheaf_pred_block=sheaf_pred_block,
+                        sheaf_learner=sheaf_learner,
                         sheaf_dropout=sheaf_dropout,
                         he_feat_type=he_feat_type,
                         num_edge_types=num_hyperedge_types,
