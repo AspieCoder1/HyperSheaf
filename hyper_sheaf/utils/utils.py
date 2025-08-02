@@ -110,7 +110,6 @@ def Laplacian(V, E, X, m):
         # two stars with mediators
         c = max(1, 2 * len(hyperedge) - 3)  # normalisation constant
         if m:
-
             # connect the supremum (Se) with the infimum (Ie)
             edges.extend([[Se, Ie], [Ie, Se]])
 

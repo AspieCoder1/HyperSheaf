@@ -9,6 +9,7 @@
 """
 This script contains all models in our paper.
 """
+
 from typing import Literal
 
 import torch.nn.functional as F
@@ -17,6 +18,7 @@ from torch_geometric.nn.dense import Linear
 from torch_scatter import scatter_mean
 
 from hyper_sheaf.utils.mlp import MLP
+
 #  This part is for HyperGCN
 from .layers import *
 from .sheaf_builder import (
@@ -37,35 +39,34 @@ class SheafHyperGNN(nn.Module):
     """
 
     def __init__(
-            self,
-            in_channels: int,
-            out_channels: int,
-            hidden_channels: int = 64,
-            sheaf_type: str = "DiagSheafs",
-            stalk_dimension: int = 6,
-            num_layers: int = 2,
-            dropout: float = 0.6,
-            sheaf_act: Literal["sigmoid", "tanh", "none"] = "sigmoid",
-            init_hedge: Literal["rand", "avg"] = "rand",
-            sheaf_normtype: Literal[
-                "degree_norm", "block_norm", "sym_degree_norm", "sym_block_norm"
-            ] = "degree_norm",
-            cuda: int = 0,
-            left_proj: bool = False,
-            allset_input_norm: bool = True,
-            dynamic_sheaf: bool = False,
-            residual_connections: bool = False,
-            use_lin2: bool = False,
-            sheaf_special_head: bool = False,
-            sheaf_learner: Literal[
-                'Sheaf-NSD', 'Sheaf-TE', 'Sheaf-ensemble'] = "Sheaf-NSD",
-            he_feat_type: Literal['var1', 'var2', 'var3', 'cp_decomp'] = 'var1',
-            sheaf_dropout: bool = False,
-            rank: int = 2,
-            is_vshae: bool = False,
-            num_node_types: int = 6,
-            num_hyperedge_types: int = 3,
-            **_kwargs,
+        self,
+        in_channels: int,
+        out_channels: int,
+        hidden_channels: int = 64,
+        sheaf_type: str = "DiagSheafs",
+        stalk_dimension: int = 6,
+        num_layers: int = 2,
+        dropout: float = 0.6,
+        sheaf_act: Literal["sigmoid", "tanh", "none"] = "sigmoid",
+        init_hedge: Literal["rand", "avg"] = "rand",
+        sheaf_normtype: Literal[
+            "degree_norm", "block_norm", "sym_degree_norm", "sym_block_norm"
+        ] = "degree_norm",
+        cuda: int = 0,
+        left_proj: bool = False,
+        allset_input_norm: bool = True,
+        dynamic_sheaf: bool = False,
+        residual_connections: bool = False,
+        use_lin2: bool = False,
+        sheaf_special_head: bool = False,
+        sheaf_learner: Literal["Sheaf-NSD", "Sheaf-TE", "Sheaf-ensemble"] = "Sheaf-NSD",
+        he_feat_type: Literal["var1", "var2", "var3", "cp_decomp"] = "var1",
+        sheaf_dropout: bool = False,
+        rank: int = 2,
+        is_vshae: bool = False,
+        num_node_types: int = 6,
+        num_hyperedge_types: int = 3,
+        **_kwargs,
     ):
         super(SheafHyperGNN, self).__init__()
 
@@ -151,7 +152,7 @@ class SheafHyperGNN(nn.Module):
                 sheaf_normtype=self.norm,
                 he_feat_type=he_feat_type,
                 num_edge_types=num_hyperedge_types,
-                num_node_types=num_node_types
+                num_node_types=num_node_types,
             )
         )
 
@@ -205,7 +206,7 @@ class SheafHyperGNN(nn.Module):
                         rank=rank,
                         he_feat_type=he_feat_type,
                         num_edge_types=num_hyperedge_types,
-                        num_node_types=num_node_types
+                        num_node_types=num_node_types,
                     )
                 )
 

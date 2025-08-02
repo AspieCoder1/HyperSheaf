@@ -20,10 +20,16 @@ class NodeMeanHeFeatBuilder(BaseHeFeatBuilder):
 
 
 class EquivariantHeFeatBuilder(BaseHeFeatBuilder):
-    def __init__(self, num_node_feats, out_channels, hidden_channels,
-                 input_norm: bool = True, **_kwargs):
+    def __init__(
+        self,
+        num_node_feats,
+        out_channels,
+        hidden_channels,
+        input_norm: bool = True,
+        **_kwargs,
+    ):
         """
-        
+
         :param num_node_feats: Number of input node features
         :param out_channels: Number of output hyperedge features
         :param hidden_channels: Number of hidden channels for MLP
@@ -37,7 +43,7 @@ class EquivariantHeFeatBuilder(BaseHeFeatBuilder):
             num_layers=1,
             dropout=0.0,
             normalisation="ln",
-            input_norm=input_norm
+            input_norm=input_norm,
         )
 
     def compute_he_features(self, x, he_feats, hyperedge_index):
@@ -45,5 +51,6 @@ class EquivariantHeFeatBuilder(BaseHeFeatBuilder):
         x_e = self.phi(x)
         # sum(φ(x_v)
         e = scatter_add(x_e[row], col, dim=0)
-        return torch.index_select(x, dim=0, index=row), torch.index_select(e, dim=0,
-                                                                           index=col)
+        return torch.index_select(x, dim=0, index=row), torch.index_select(
+            e, dim=0, index=col
+        )

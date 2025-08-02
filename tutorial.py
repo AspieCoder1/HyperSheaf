@@ -5,8 +5,8 @@ from hyper_sheaf.feature_builders.input_feats import InputFeatsHeFeatBuilder
 from hyper_sheaf.models.sheaf_hgcn.models import SheafHyperGCN
 from hyper_sheaf.models.sheaf_hgnn.models import SheafHyperGNN
 
-if __name__ == '__main__':
-    device = torch.device('cpu')
+if __name__ == "__main__":
+    device = torch.device("cpu")
 
     # create a random hypergraph to run inference for
     num_nodes = 10
@@ -14,7 +14,8 @@ if __name__ == '__main__':
     num_hyperedge_types = 2
     features = torch.rand(num_nodes, 64)
     edge_index = torch.tensor(
-        [[0, 1, 2, 0, 1, 3, 4, 1, 2, 4], [0, 0, 0, 1, 1, 1, 1, 2, 2, 2]])
+        [[0, 1, 2, 0, 1, 3, 4, 1, 2, 4], [0, 0, 0, 1, 1, 1, 1, 2, 2, 2]]
+    )
     labels = torch.randint(0, 5, (num_nodes,))
     hyperedge_types = torch.randint(0, num_hyperedge_types, (3,))
     node_types = torch.randint(0, num_node_types, (num_nodes,))
@@ -27,14 +28,14 @@ if __name__ == '__main__':
     ).to(device)
 
     feat_builder = InputFeatsHeFeatBuilder()
-    sheaf_learner: str = 'Sheaf-ensemble'
+    sheaf_learner: str = "Sheaf-ensemble"
 
     model = SheafHyperGNN(
         in_channels=64,
         out_channels=5,
         use_lin2=True,
-        he_feat_type='var1',
-        sheaf_learner='Sheaf-ensemble',
+        he_feat_type="var1",
+        sheaf_learner="Sheaf-ensemble",
         num_node_types=data.num_node_types,
         num_hyperedge_types=data.num_hyperedge_types,
         dynamic_sheaf=False,
@@ -48,10 +49,10 @@ if __name__ == '__main__':
         in_channels=64,
         out_channels=5,
         use_lin2=True,
-        he_feat_type='var1',
-        sheaf_learner='Sheaf-ensemble',
+        he_feat_type="var1",
+        sheaf_learner="Sheaf-ensemble",
         num_node_types=data.num_node_types,
-        num_hyperedge_types=data.num_hyperedge_types
+        num_hyperedge_types=data.num_hyperedge_types,
     ).to(device)
 
     out = model(data)

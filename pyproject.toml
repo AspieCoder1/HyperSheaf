@@ -1,0 +1,48 @@
+[project]
+name = "hypersheaf"
+version = "0.1.0"
+authors = ["Luke Braithwaite <lukebraithwaite7@gmail.com>"]
+description = "Python library for working with Sheah Graph and Hypergraph Neural Networks for Heterogeneous Data"
+readme = "README.md"
+requires-python = ">=3.13"
+license = "MIT"
+dependencies = [
+    "torch>=2.7.1",
+    "torch-geometric>=2.6.1",
+    "pyg-lib",
+    "torch-cluster",
+    "torch-scatter",
+    "torch-sparse",
+    "torch-spline-conv",
+]
+
+[tool.uv]
+environments = ["sys_platform == 'darwin'", "sys_platform == 'linux'"]
+
+[tool.uv.sources]
+pyg-lib = [
+    { url = "https://data.pyg.org/whl/torch-2.7.0%2Bcpu/pyg_lib-0.4.0%2Bpt27-cp313-cp313-macosx_14_0_universal2.whl", marker = "sys_platform == 'darwin'"},
+    { url = "https://data.pyg.org/whl/torch-2.7.0%2Bcu128/pyg_lib-0.4.0%2Bpt27cu128-cp313-cp313-linux_x86_64.whl", marker = "sys_platform == 'linux'"}
+]
+torch-cluster = [
+    { url = "https://data.pyg.org/whl/torch-2.7.0%2Bcpu/torch_cluster-1.6.3-cp313-cp313-macosx_10_13_universal2.whl", marker = "sys_platform == 'darwin'"},
+    { url = "https://data.pyg.org/whl/torch-2.7.0%2Bcu128/torch_cluster-1.6.3%2Bpt27cu128-cp313-cp313-linux_x86_64.whl", marker = "sys_platform == 'linux'"}
+]
+torch-scatter = [
+    { url = "https://data.pyg.org/whl/torch-2.7.0%2Bcpu/torch_scatter-2.1.2-cp313-cp313-macosx_10_13_universal2.whl", marker = "sys_platform == 'darwin'"},
+    { url = "https://data.pyg.org/whl/torch-2.7.0%2Bcu128/torch_scatter-2.1.2%2Bpt27cu128-cp313-cp313-linux_x86_64.whl", marker = "sys_platform == 'linux'"}
+]
+torch-sparse = [
+    { url = "https://data.pyg.org/whl/torch-2.7.0%2Bcpu/torch_sparse-0.6.18-cp313-cp313-macosx_11_0_universal2.whl", marker = "sys_platform == 'darwin'"},
+    { url = "https://data.pyg.org/whl/torch-2.7.0%2Bcu128/torch_sparse-0.6.18%2Bpt27cu128-cp313-cp313-linux_x86_64.whl", marker = "sys_platform == 'linux'"}
+]
+torch-spline-conv = [
+    { url = "https://data.pyg.org/whl/torch-2.7.0%2Bcpu/torch_spline_conv-1.2.2-cp313-cp313-macosx_10_13_universal2.whl", marker = "sys_platform == 'darwin'"},
+    { url = "https://data.pyg.org/whl/torch-2.7.0%2Bcu128/torch_spline_conv-1.2.2%2Bpt27cu128-cp313-cp313-linux_x86_64.whl", marker = "sys_platform == 'linux'"}
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.1",
+]
+

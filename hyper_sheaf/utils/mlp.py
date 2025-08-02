@@ -6,14 +6,14 @@ class MLP(nn.Module):
     """adapted from https://github.com/CUAI/CorrectAndSmooth/blob/master/gen_models.py"""
 
     def __init__(
-            self,
-            in_channels,
-            hidden_channels,
-            out_channels,
-            num_layers,
-            dropout=0.5,
-            normalisation="bn",
-            input_norm=False,
+        self,
+        in_channels,
+        hidden_channels,
+        out_channels,
+        num_layers,
+        dropout=0.5,
+        normalisation="bn",
+        input_norm=False,
     ):
         super(MLP, self).__init__()
         self.lins = nn.ModuleList()
@@ -82,7 +82,7 @@ class MLP(nn.Module):
         for lin in self.lins:
             lin.reset_parameters()
         for normalization in self.normalizations:
-            if not (normalization.__class__.__name__ is "Identity"):
+            if normalization.__class__.__name__ != "Identity":
                 normalization.reset_parameters()
 
     def forward(self, x):

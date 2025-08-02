@@ -5,7 +5,7 @@ from hyper_sheaf.utils import utils
 
 from torch_scatter import scatter_add
 
-# This functions creates the non-linear sheaf Laplacian used for SheafHyperGCN
+# These functions create the non-linear sheaf Laplacian used for SheafHyperGCN
 
 
 def reduce_graph(X_reduced, m, d, edge_index):
@@ -38,9 +38,9 @@ def reduce_graph(X_reduced, m, d, edge_index):
     receivers_pairs = torch.stack(
         (receivers_idx, receivers_nodes, receivers_hedge), dim=-1
     )
-    key_func = lambda x: x[
-        2
-    ]  # sort them according to the hyperedge such that we can extract the nodes from each hyperedge
+    key_func = (
+        lambda x: x[2]
+    )  # sort them according to the hyperedge such that we can extract the nodes from each hyperedge
 
     receivers_pairs = receivers_pairs.detach().cpu().numpy()
     receivers_pairs_sort = sorted(

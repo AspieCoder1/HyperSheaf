@@ -6,9 +6,16 @@ from .core import HeteroSheafLearner
 
 
 class TypeConcatSheafLearner(HeteroSheafLearner):
-    def __init__(self, node_feats: int, out_channels: int, num_node_types, num_he_types,
-                 hidden_channels: int = 64,
-                 norm: bool = True, act_fn: str = 'relu'):
+    def __init__(
+        self,
+        node_feats: int,
+        out_channels: int,
+        num_node_types,
+        num_he_types,
+        hidden_channels: int = 64,
+        norm: bool = True,
+        act_fn: str = "relu",
+    ):
         super(TypeConcatSheafLearner, self).__init__(act_fn=act_fn)
 
         self.lin = MLP(

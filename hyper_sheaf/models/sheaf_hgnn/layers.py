@@ -126,7 +126,7 @@ class HyperDiffusionDiagSheafConv(MessagePassing):
         left_proj=None,
         norm=None,
         residual=False,
-        **kwargs
+        **kwargs,
     ):
         kwargs.setdefault("aggr", "add")
         super().__init__(flow="source_to_target", node_dim=0, **kwargs)
@@ -312,7 +312,7 @@ class HyperDiffusionOrthoSheafConv(MessagePassing):
         left_proj=None,
         norm=None,
         residual=False,
-        **kwargs
+        **kwargs,
     ):
         kwargs.setdefault("aggr", "add")
         super().__init__(flow="source_to_target", node_dim=0, **kwargs)
@@ -501,7 +501,7 @@ class HyperDiffusionGeneralSheafConv(MessagePassing):
         left_proj=None,
         norm=None,
         residual=False,
-        **kwargs
+        **kwargs,
     ):
         kwargs.setdefault("aggr", "add")
         super().__init__(flow="source_to_target", node_dim=0, **kwargs)

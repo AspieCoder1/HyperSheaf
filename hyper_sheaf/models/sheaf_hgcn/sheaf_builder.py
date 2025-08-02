@@ -8,7 +8,8 @@ from hyper_sheaf.feature_builders.cp_decomp import CPDecompHeFeatBuilder
 from hyper_sheaf.feature_builders.input_feats import InputFeatsHeFeatBuilder
 from hyper_sheaf.feature_builders.neighbour_aggregation import (
     EquivariantHeFeatBuilder,
-    NodeMeanHeFeatBuilder, )
+    NodeMeanHeFeatBuilder,
+)
 from hyper_sheaf.sheaf_learners.local_concat import LocalConcatSheafLearner
 from hyper_sheaf.sheaf_learners.type_concat import TypeConcatSheafLearner
 from hyper_sheaf.sheaf_learners.type_ensemble import TypeEnsembleSheafLearner
@@ -17,19 +18,19 @@ from hyper_sheaf.utils.orthogonal import Orthogonal
 
 class HGCNSheafBuilder(nn.Module):
     def __init__(
-            self,
-            stalk_dimension: int,
-            hidden_channels: int = 64,
-            dropout: float = 0.6,
-            allset_input_norm: bool = True,
-            sheaf_special_head: bool = False,
-            sheaf_learner: str = "Sheaf-NSD",
-            sheaf_dropout: bool = False,
-            sheaf_act: str = "sigmoid",
-            num_node_types: int = 3,
-            num_edge_types: int = 6,
-            sheaf_out_channels: Optional[int] = None,
-            he_feat_type: str = 'var1'
+        self,
+        stalk_dimension: int,
+        hidden_channels: int = 64,
+        dropout: float = 0.6,
+        allset_input_norm: bool = True,
+        sheaf_special_head: bool = False,
+        sheaf_learner: str = "Sheaf-NSD",
+        sheaf_dropout: bool = False,
+        sheaf_act: str = "sigmoid",
+        num_node_types: int = 3,
+        num_edge_types: int = 6,
+        sheaf_out_channels: Optional[int] = None,
+        he_feat_type: str = "var1",
     ):
         super(HGCNSheafBuilder, self).__init__()
         self.prediction_type = (
@@ -52,23 +53,27 @@ class HGCNSheafBuilder(nn.Module):
 
         if self.he_feat_type == "var3":
             self.he_feat_builder = EquivariantHeFeatBuilder(
-                num_node_feats=self.MLP_hidden, out_channels=hidden_channels,
-                hidden_channels=hidden_channels, input_norm=self.norm)
+                num_node_feats=self.MLP_hidden,
+                out_channels=hidden_channels,
+                hidden_channels=hidden_channels,
+                input_norm=self.norm,
+            )
         elif self.he_feat_type == "cp_decomp":
             self.he_feat_builder = CPDecompHeFeatBuilder(
-                hidden_channels=hidden_channels, input_norm=self.norm)
+                hidden_channels=hidden_channels, input_norm=self.norm
+            )
         elif self.he_feat_type == "var2":
             self.he_feat_builder = NodeMeanHeFeatBuilder()
         else:
             self.he_feat_builder = InputFeatsHeFeatBuilder()
 
-        if self.prediction_type == 'Sheaf-NSD':
+        if self.prediction_type == "Sheaf-NSD":
             self.sheaf_predictor = LocalConcatSheafLearner(
                 node_feats=self.MLP_hidden,
                 hidden_channels=hidden_channels,
                 out_channels=self.sheaf_out_channels,
                 norm=self.norm,
-                act_fn=sheaf_act
+                act_fn=sheaf_act,
             )
         elif self.prediction_type == "Sheaf-TE":
             self.sheaf_predictor = TypeConcatSheafLearner(
@@ -78,7 +83,7 @@ class HGCNSheafBuilder(nn.Module):
                 num_node_types=num_node_types,
                 num_he_types=num_edge_types,
                 act_fn=sheaf_act,
-                norm=self.norm
+                norm=self.norm,
             )
         elif self.prediction_type == "Sheaf-ensemble":
             self.sheaf_predictor = TypeEnsembleSheafLearner(
@@ -86,31 +91,33 @@ class HGCNSheafBuilder(nn.Module):
                 hidden_channels=hidden_channels,
                 out_channels=self.sheaf_out_channels,
                 act_fn=sheaf_act,
-                num_he_types=num_edge_types
+                num_he_types=num_edge_types,
             )
 
     def compute_node_hyperedge_features(self, x, e, hyperedge_index):
         return self.he_feat_builder(x, e, hyperedge_index)
 
     def predict_sheaf(self, xs, es, hyperedge_index, node_types, hyperedge_types):
-        return self.sheaf_predictor(xs, es, hyperedge_index, node_types, hyperedge_types)
+        return self.sheaf_predictor(
+            xs, es, hyperedge_index, node_types, hyperedge_types
+        )
 
 
 class HGCNSheafBuilderDiag(HGCNSheafBuilder):
     def __init__(
-            self,
-            stalk_dimension: int,
-            hidden_channels: int = 64,
-            dropout: float = 0.6,
-            allset_input_norm: bool = True,
-            sheaf_special_head: bool = False,
-            sheaf_learner: str = 'Sheaf-NSD',
-            sheaf_dropout: bool = False,
-            sheaf_act: str = "sigmoid",
-            num_node_types: int = 3,
-            num_edge_types: int = 6,
-            he_feat_type: str = 'var1',
-            **_kwargs,
+        self,
+        stalk_dimension: int,
+        hidden_channels: int = 64,
+        dropout: float = 0.6,
+        allset_input_norm: bool = True,
+        sheaf_special_head: bool = False,
+        sheaf_learner: str = "Sheaf-NSD",
+        sheaf_dropout: bool = False,
+        sheaf_act: str = "sigmoid",
+        num_node_types: int = 3,
+        num_edge_types: int = 6,
+        he_feat_type: str = "var1",
+        **_kwargs,
     ):
         """
         hidden_dim overwrite the self.MLP_hidden used in the normal sheaf HNN
@@ -156,8 +163,9 @@ class HGCNSheafBuilderDiag(HGCNSheafBuilder):
         e = e.view(num_edges, self.d, e.shape[-1]).mean(1)  # # x d x f -> E x f
 
         xs, es = self.compute_node_hyperedge_features(x, e, hyperedge_index)
-        h_sheaf = self.predict_sheaf(xs, es, hyperedge_index, node_types,
-                                     hyperedge_types)
+        h_sheaf = self.predict_sheaf(
+            xs, es, hyperedge_index, node_types, hyperedge_types
+        )
 
         if self.sheaf_dropout:
             h_sheaf = F.dropout(h_sheaf, p=self.dropout, training=self.training)
@@ -167,19 +175,19 @@ class HGCNSheafBuilderDiag(HGCNSheafBuilder):
 
 class HGCNSheafBuilderGeneral(HGCNSheafBuilder):
     def __init__(
-            self,
-            stalk_dimension: int,
-            hidden_channels: int = 64,
-            dropout: float = 0.6,
-            allset_input_norm: bool = True,
-            sheaf_special_head: bool = False,
-            sheaf_learner: str = "Sheaf-NSD",
-            sheaf_dropout: bool = False,
-            sheaf_act: str = "sigmoid",
-            num_node_types: int = 3,
-            num_edge_types: int = 6,
-            he_feat_type: str = 'var1',
-            **_kwargs
+        self,
+        stalk_dimension: int,
+        hidden_channels: int = 64,
+        dropout: float = 0.6,
+        allset_input_norm: bool = True,
+        sheaf_special_head: bool = False,
+        sheaf_learner: str = "Sheaf-NSD",
+        sheaf_dropout: bool = False,
+        sheaf_act: str = "sigmoid",
+        num_node_types: int = 3,
+        num_edge_types: int = 6,
+        he_feat_type: str = "var1",
+        **_kwargs,
     ):
         super(HGCNSheafBuilderGeneral, self).__init__(
             stalk_dimension=stalk_dimension,
@@ -193,7 +201,7 @@ class HGCNSheafBuilderGeneral(HGCNSheafBuilder):
             num_node_types=num_node_types,
             num_edge_types=num_edge_types,
             sheaf_out_channels=stalk_dimension * stalk_dimension,
-            he_feat_type=he_feat_type
+            he_feat_type=he_feat_type,
         )
 
     def reset_parameters(self):
@@ -222,8 +230,9 @@ class HGCNSheafBuilderGeneral(HGCNSheafBuilder):
         e = e.view(num_edges, self.d, e.shape[-1]).mean(1)  # # x d x f -> E x f
 
         xs, es = self.compute_node_hyperedge_features(x, e, hyperedge_index)
-        h_sheaf = self.predict_sheaf(xs, es, hyperedge_index, node_types,
-                                     hyperedge_types)
+        h_sheaf = self.predict_sheaf(
+            xs, es, hyperedge_index, node_types, hyperedge_types
+        )
 
         if self.sheaf_dropout:
             h_sheaf = F.dropout(h_sheaf, p=self.dropout, training=self.training)
@@ -233,19 +242,19 @@ class HGCNSheafBuilderGeneral(HGCNSheafBuilder):
 
 class HGCNSheafBuilderOrtho(HGCNSheafBuilder):
     def __init__(
-            self,
-            stalk_dimension: int,
-            hidden_channels: int = 64,
-            dropout: float = 0.6,
-            allset_input_norm: bool = True,
-            sheaf_special_head: bool = False,
-            sheaf_learner: str = "Sheaf-NSD",
-            sheaf_dropout: bool = False,
-            sheaf_act: str = "sigmoid",
-            num_node_types: int = 3,
-            num_edge_types: int = 6,
-            he_feat_type: str = 'var1',
-            **_kwargs
+        self,
+        stalk_dimension: int,
+        hidden_channels: int = 64,
+        dropout: float = 0.6,
+        allset_input_norm: bool = True,
+        sheaf_special_head: bool = False,
+        sheaf_learner: str = "Sheaf-NSD",
+        sheaf_dropout: bool = False,
+        sheaf_act: str = "sigmoid",
+        num_node_types: int = 3,
+        num_edge_types: int = 6,
+        he_feat_type: str = "var1",
+        **_kwargs,
     ):
         super(HGCNSheafBuilderOrtho, self).__init__(
             stalk_dimension=stalk_dimension,
@@ -259,7 +268,7 @@ class HGCNSheafBuilderOrtho(HGCNSheafBuilder):
             num_node_types=num_node_types,
             num_edge_types=num_edge_types,
             sheaf_out_channels=stalk_dimension * (stalk_dimension - 1) // 2,
-            he_feat_type=he_feat_type
+            he_feat_type=he_feat_type,
         )
         self.orth_transform = Orthogonal(
             d=self.d, orthogonal_map="householder"
@@ -281,8 +290,9 @@ class HGCNSheafBuilderOrtho(HGCNSheafBuilder):
         e = e.view(num_edges, self.d, e.shape[-1]).mean(1)  # # x d x f -> E x f
 
         xs, es = self.compute_node_hyperedge_features(x, e, hyperedge_index)
-        h_sheaf = self.predict_sheaf(xs, es, hyperedge_index, node_types,
-                                     hyperedge_types)
+        h_sheaf = self.predict_sheaf(
+            xs, es, hyperedge_index, node_types, hyperedge_types
+        )
         h_sheaf = self.orth_transform(h_sheaf)  # sparse version of a NxExdxd tensor
         if self.sheaf_dropout:
             h_sheaf = F.dropout(h_sheaf, p=self.dropout, training=self.training)
@@ -292,21 +302,21 @@ class HGCNSheafBuilderOrtho(HGCNSheafBuilder):
 
 class HGCNSheafBuilderLowRank(nn.Module):
     def __init__(
-            self,
-            stalk_dimension: int,
-            hidden_channels: int = 64,
-            dropout: float = 0.6,
-            allset_input_norm: bool = True,
-            sheaf_special_head: bool = False,
-            sheaf_learner: str = "Sheaf-NSD",
-            sheaf_normtype: str = "degree_norm",
-            sheaf_dropout: bool = False,
-            sheaf_act: str = "sigmoid",
-            num_node_types: int = 3,
-            num_edge_types: int = 6,
-            he_feat_type: str = 'var1',
-            rank: int = 2,
-            **_kwargs,
+        self,
+        stalk_dimension: int,
+        hidden_channels: int = 64,
+        dropout: float = 0.6,
+        allset_input_norm: bool = True,
+        sheaf_special_head: bool = False,
+        sheaf_learner: str = "Sheaf-NSD",
+        sheaf_normtype: str = "degree_norm",
+        sheaf_dropout: bool = False,
+        sheaf_act: str = "sigmoid",
+        num_node_types: int = 3,
+        num_edge_types: int = 6,
+        he_feat_type: str = "var1",
+        rank: int = 2,
+        **_kwargs,
     ):
         super(HGCNSheafBuilderLowRank, self).__init__(
             stalk_dimension=stalk_dimension,
@@ -320,7 +330,7 @@ class HGCNSheafBuilderLowRank(nn.Module):
             num_node_types=num_node_types,
             num_edge_types=num_edge_types,
             sheaf_out_channels=2 * stalk_dimension * rank + stalk_dimension,
-            he_feat_type=he_feat_type
+            he_feat_type=he_feat_type,
         )
         self.rank = rank  # rank for the block matrices
         self.norm_type = sheaf_normtype
@@ -351,25 +361,22 @@ class HGCNSheafBuilderLowRank(nn.Module):
         e = e.view(num_edges, self.d, e.shape[-1]).mean(1)  # # x d x f -> E x f
 
         xs, es = self.compute_node_hyperedge_features(x, e, hyperedge_index)
-        h_sheaf = self.predict_sheaf(xs, es, hyperedge_index, node_types,
-                                     hyperedge_types)
+        h_sheaf = self.predict_sheaf(
+            xs, es, hyperedge_index, node_types, hyperedge_types
+        )
 
         # h_sheaf is nnz x (2*d*r)
         h_sheaf_A = h_sheaf[:, : self.d * self.rank].reshape(
             h_sheaf.shape[0], self.d, self.rank
         )  # nnz x d x r
-        h_sheaf_B = h_sheaf[
-                    :, self.d * self.rank: 2 * self.d * self.rank
-                    ].reshape(
+        h_sheaf_B = h_sheaf[:, self.d * self.rank : 2 * self.d * self.rank].reshape(
             h_sheaf.shape[0], self.d, self.rank
         )  # nnz x d x r
-        h_sheaf_C = h_sheaf[:, 2 * self.d * self.rank:].reshape(
+        h_sheaf_C = h_sheaf[:, 2 * self.d * self.rank :].reshape(
             h_sheaf.shape[0], self.d
         )  # nnz x d x r
 
-        h_sheaf = torch.bmm(
-            h_sheaf_A, h_sheaf_B.transpose(2, 1)
-        )  # rank-r matrix
+        h_sheaf = torch.bmm(h_sheaf_A, h_sheaf_B.transpose(2, 1))  # rank-r matrix
 
         diag = torch.diag_embed(h_sheaf_C)
         h_sheaf = h_sheaf + diag

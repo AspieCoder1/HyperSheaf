@@ -15,15 +15,16 @@ class HeteroSheafLearner(torch.nn.Module):
 
     def forward(self, node_feats, he_feats, he_index, node_types, he_types):
         return self.sheaf_act(
-            self.predict_sheaf(node_feats, he_feats, he_index, node_types, he_types))
+            self.predict_sheaf(node_feats, he_feats, he_index, node_types, he_types)
+        )
 
     def sheaf_act(self, h_sheaf):
-        if self.act_fn == 'relu':
+        if self.act_fn == "relu":
             return F.relu(h_sheaf)
-        if self.act_fn == 'sigmoid':
+        if self.act_fn == "sigmoid":
             return F.sigmoid(h_sheaf)
-        if self.act_fn == 'tanh':
+        if self.act_fn == "tanh":
             return F.tanh(h_sheaf)
-        if self.act_fn == 'elu':
+        if self.act_fn == "elu":
             return F.elu(h_sheaf)
         return h_sheaf

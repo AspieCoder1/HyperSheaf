@@ -8,13 +8,17 @@ from torch_geometric.nn import Linear
 from torch_scatter import scatter_mean, scatter_add
 
 from hyper_sheaf.data import HeteroHypergraph
-from hyper_sheaf.models.sheaf_hgcn.hgcn_sheaf_laplacians import (SheafLaplacianDiag,
-                                                                 SheafLaplacianOrtho,
-                                                                 SheafLaplacianGeneral, )
-from hyper_sheaf.models.sheaf_hgcn.sheaf_builder import (HGCNSheafBuilderDiag,
-                                                         HGCNSheafBuilderOrtho,
-                                                         HGCNSheafBuilderGeneral,
-                                                         HGCNSheafBuilderLowRank, )
+from hyper_sheaf.models.sheaf_hgcn.hgcn_sheaf_laplacians import (
+    SheafLaplacianDiag,
+    SheafLaplacianOrtho,
+    SheafLaplacianGeneral,
+)
+from hyper_sheaf.models.sheaf_hgcn.sheaf_builder import (
+    HGCNSheafBuilderDiag,
+    HGCNSheafBuilderOrtho,
+    HGCNSheafBuilderGeneral,
+    HGCNSheafBuilderLowRank,
+)
 from hyper_sheaf.utils import utils
 from hyper_sheaf.utils.mlp import MLP
 
@@ -43,9 +47,8 @@ class SheafHyperGCN(nn.Module):
         residual_connections: bool = False,
         use_lin2: bool = False,
         sheaf_special_head: bool = False,
-        sheaf_learner: Literal[
-            'Sheaf-NSD', 'Sheaf-TE', 'Sheaf-ensemble'] = "Sheaf-NSD",
-        he_feat_type: Literal['var1', 'var2', 'var3', 'cp_decomp'] = 'var1',
+        sheaf_learner: Literal["Sheaf-NSD", "Sheaf-TE", "Sheaf-ensemble"] = "Sheaf-NSD",
+        he_feat_type: Literal["var1", "var2", "var3", "cp_decomp"] = "var1",
         sheaf_dropout: bool = False,
         rank: int = 2,
         num_node_types: int = 6,
@@ -148,7 +151,7 @@ class SheafHyperGCN(nn.Module):
                 rank=rank,
                 he_feat_type=he_feat_type,
                 num_node_types=num_node_types,
-                num_edge_types=num_hyperedge_types
+                num_edge_types=num_hyperedge_types,
             )
         )
 
@@ -169,7 +172,7 @@ class SheafHyperGCN(nn.Module):
                         sheaf_dropout=sheaf_dropout,
                         he_feat_type=he_feat_type,
                         num_edge_types=num_hyperedge_types,
-                        num_node_types=num_node_types
+                        num_node_types=num_node_types,
                     )
                 )
 
@@ -370,10 +373,10 @@ class SheafHyperGCN(nn.Module):
 
                 eye_diag = torch.ones((num_nodes * self.d))
                 A = (
-                        utils.sparse_diagonal(
+                    utils.sparse_diagonal(
                         eye_diag, (num_nodes * self.d, num_nodes * self.d)
                     ).to(A.device)
-                        - A
+                    - A
                 )  # I - A
 
             if self.left_proj:

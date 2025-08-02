@@ -3,10 +3,15 @@ from torch_geometric.typing import OptTensor
 
 
 class HeteroHypergraph(Data):
-
-    def __init__(self, x: OptTensor = None, hyperedge_index: OptTensor = None,
-                 node_types: OptTensor = None, hyperedge_types: OptTensor = None,
-                 hyperedge_features: OptTensor = None, y: OptTensor = None, ):
+    def __init__(
+        self,
+        x: OptTensor = None,
+        hyperedge_index: OptTensor = None,
+        node_types: OptTensor = None,
+        hyperedge_types: OptTensor = None,
+        hyperedge_features: OptTensor = None,
+        y: OptTensor = None,
+    ):
         super(HeteroHypergraph, self).__init__(
             x=x,
             edge_index=hyperedge_index,
@@ -22,8 +27,11 @@ class HeteroHypergraph(Data):
 
     @property
     def num_hyperedge_types(self) -> int:
-        return int(
-            self.hyperedge_types.max()) + 1 if self.hyperedge_types is not None else 1
+        return (
+            int(self.hyperedge_types.max()) + 1
+            if self.hyperedge_types is not None
+            else 1
+        )
 
     @property
     def num_hyperedges(self) -> int:

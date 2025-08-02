@@ -6,8 +6,14 @@ from .core import HeteroSheafLearner
 
 
 class LocalConcatSheafLearner(HeteroSheafLearner):
-    def __init__(self, node_feats: int, out_channels: int, hidden_channels: int = 64,
-                 norm: bool = True, act_fn: str = 'relu'):
+    def __init__(
+        self,
+        node_feats: int,
+        out_channels: int,
+        hidden_channels: int = 64,
+        norm: bool = True,
+        act_fn: str = "relu",
+    ):
         super(LocalConcatSheafLearner, self).__init__(act_fn=act_fn)
         self.lin = MLP(
             in_channels=2 * node_feats,

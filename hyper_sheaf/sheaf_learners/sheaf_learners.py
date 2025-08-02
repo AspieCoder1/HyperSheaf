@@ -19,8 +19,9 @@ def predict_block_local_concat(xs, es, sheaf_lin, sheaf_act):
     return h_sheaf
 
 
-def predict_block_type_concat(xs, es, hyperedge_index, node_types, hyperedge_types,
-                              sheaf_lin, sheaf_act):
+def predict_block_type_concat(
+    xs, es, hyperedge_index, node_types, hyperedge_types, sheaf_lin, sheaf_act
+):
     node, hyperedge = hyperedge_index
     node_types_onehot = F.one_hot(node_types.to(torch.long))
     hyperedge_types_onehot = F.one_hot(hyperedge_types.to(torch.long))
@@ -45,13 +46,15 @@ def predict_block_type_concat(xs, es, hyperedge_index, node_types, hyperedge_typ
     return h_sheaf
 
 
-def predict_block_type_ensemble(xs, es, hyperedge_index, hyperedge_types, sheaf_lins,
-                                sheaf_act):
+def predict_block_type_ensemble(
+    xs, es, hyperedge_index, hyperedge_types, sheaf_lins, sheaf_act
+):
     node, hyperedge = hyperedge_index
     h_cat = torch.cat((xs, es), dim=-1)
 
     hyperedge_types = torch.index_select(hyperedge_types, dim=0, index=hyperedge).to(
-        torch.long)
+        torch.long
+    )
 
     unique, counts = torch.unique(hyperedge_types, return_counts=True)
     hyperedge_type_idx = torch.argsort(hyperedge_types)
