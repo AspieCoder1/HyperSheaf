@@ -20,7 +20,9 @@ class MLP(nn.Module):
         self.normalizations = nn.ModuleList()
         self.InputNorm = input_norm
 
-        assert normalisation in ["bn", "ln", "None"]
+        if normalisation not in ["bn", "ln", "None"]:
+            raise ValueError("normalisation must be one of bn, ln or None")
+
         if normalisation == "bn":
             if num_layers == 1:
                 # just linear layer i.e. logistic regression
@@ -42,7 +44,6 @@ class MLP(nn.Module):
                 self.lins.append(nn.Linear(hidden_channels, out_channels))
 
         elif normalisation == "ln":
-            print("using LN")
             if num_layers == 1:
                 # just linear layer i.e. logistic regression
                 if input_norm:
@@ -82,7 +83,7 @@ class MLP(nn.Module):
         for lin in self.lins:
             lin.reset_parameters()
         for normalization in self.normalizations:
-            if normalization.__class__.__name__ != "Identity":
+            if not isinstance(normalization, nn.Identity):
                 normalization.reset_parameters()
 
     def forward(self, x):

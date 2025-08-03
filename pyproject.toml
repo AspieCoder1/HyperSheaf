@@ -1,7 +1,9 @@
 [project]
 name = "hypersheaf"
 version = "0.1.0"
-authors = ["Luke Braithwaite <lukebraithwaite7@gmail.com>"]
+authors = [
+    {name="Luke Braithwaite", email="lukebraithwaite7@gmail.com"}
+]
 description = "Python library for working with Sheah Graph and Hypergraph Neural Networks for Heterogeneous Data"
 readme = "README.md"
 requires-python = ">=3.13"
@@ -41,8 +43,22 @@ torch-spline-conv = [
     { url = "https://data.pyg.org/whl/torch-2.7.0%2Bcu128/torch_spline_conv-1.2.2%2Bpt27cu128-cp313-cp313-linux_x86_64.whl", marker = "sys_platform == 'linux'"}
 ]
 
+[tool.uv.build-backend]
+module-root=""
+module-name="hyper_sheaf"
+
 [dependency-groups]
 dev = [
     "pytest>=8.4.1",
 ]
+
+[tool.ruff.format]
+quote-style="double"
+
+[tool.ruff.lint.pydocstyle]
+convention="google"
+
+[build-system]
+requires = ["uv_build>=0.8.4,<0.9.0"]
+build-backend = "uv_build"
 

@@ -1,8 +1,9 @@
 import torch
 from abc import abstractmethod
+from abc import ABC as AbstractBaseClass
 
 
-class BaseHeFeatBuilder(torch.nn.Module):
+class BaseHeFeatBuilder(torch.nn.Module, AbstractBaseClass):
     ...
 
     def __init__(self):

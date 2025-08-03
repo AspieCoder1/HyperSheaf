@@ -161,7 +161,7 @@ wheels = [
 [[package]]
 name = "hypersheaf"
 version = "0.1.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "pyg-lib", version = "0.4.0+pt27", source = { url = "https://data.pyg.org/whl/torch-2.7.0%2Bcpu/pyg_lib-0.4.0%2Bpt27-cp313-cp313-macosx_14_0_universal2.whl" }, marker = "sys_platform == 'darwin'" },
     { name = "pyg-lib", version = "0.4.0+pt27cu128", source = { url = "https://data.pyg.org/whl/torch-2.7.0%2Bcu128/pyg_lib-0.4.0%2Bpt27cu128-cp313-cp313-linux_x86_64.whl" }, marker = "sys_platform == 'linux'" },
