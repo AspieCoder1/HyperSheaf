@@ -53,27 +53,16 @@ def test_result_is_orthogonal(
     assert all_orthogonal(out)
 
 
-def test_orthogonal_euler_2d_wrong_param_size():
-    orth_model = Orthogonal(d=2, orthogonal_map="euler")
+@pytest.mark.parametrize("stalk_dim,param_dim", [(2, 1), (3, 3)])
+def test_orthogonal_euler_wrong_param_dim(stalk_dim: int, param_dim: int):
+    orth_model = Orthogonal(d=stalk_dim, orthogonal_map="euler")
 
     with pytest.raises(
         ValueError,
-        match=re.escape("params.size(-1) must be 1 but received the value 10"),
+        match=re.escape(f"params.size(-1) must be {param_dim} but received the value 10"),
     ):
         x = torch.randn((4, 10)).clip(-1, 1)
         orth_model(x)
-
-
-def test_orthogonal_euler_3d_wrong_param_size():
-    orth_model = Orthogonal(d=3, orthogonal_map="euler")
-
-    with pytest.raises(
-        ValueError,
-        match=re.escape("params.size(-1) must be 3 but received the value 10"),
-    ):
-        x = torch.randn((4, 10)).clip(-1, 1)
-        orth_model(x)
-
 
 def test_orthogonal_euler_3d_values_out_of_range():
     orth_model = Orthogonal(d=3, orthogonal_map="euler")
