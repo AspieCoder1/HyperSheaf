@@ -11,7 +11,7 @@ class Orthogonal(nn.Module):
     """from https://github.com/twitter-research/neural-sheaf-diffusion/blob/12542551219235f2f945c9603a22d0e27fd8fe10/models/orthogonal.py#L11
     Based on https://pytorch.org/docs/stable/_modules/torch/nn/utils/parametrizations.html#orthogonal"""
 
-    def __init__(self, d, orthogonal_map):
+    def __init__(self, d: int, orthogonal_map: str):
         super().__init__()
         if orthogonal_map not in ["matrix_exp", "cayley", "householder", "euler"]:
             raise ValueError(f"Unsupported transformations {orthogonal_map}")
@@ -20,14 +20,20 @@ class Orthogonal(nn.Module):
 
     def get_2d_rotation(self, params):
         # assert params.min() >= -1.0 and params.max() <= 1.0
-        assert params.size(-1) == 1
+
+        if params.size(-1) != 1:
+            raise ValueError(f"params.size(-1) must be 1 but received the value {params.size(-1)}")
+
         sin = torch.sin(params * 2 * math.pi)
         cos = torch.cos(params * 2 * math.pi)
         return torch.cat([cos, -sin, sin, cos], dim=1).view(-1, 2, 2)
 
     def get_3d_rotation(self, params):
-        assert params.min() >= -1.0 and params.max() <= 1.0
-        assert params.size(-1) == 3
+        if params.min() < -1.0 or params.max() > 1.0:
+            raise ValueError("params must be in the range [-1, 1]")
+        
+        if params.size(-1) != 3:
+            raise ValueError(f"params.size(-1) must be 3 but received the value {params.size(-1)}")
 
         alpha = params[:, 0].view(-1, 1) * 2 * math.pi
         beta = params[:, 1].view(-1, 1) * 2 * math.pi
@@ -53,19 +59,26 @@ class Orthogonal(nn.Module):
         ).view(-1, 3, 3)
 
     def forward(self, params: torch.Tensor) -> torch.Tensor:
-        if self.orthogonal_map != "euler":
-            # Construct a lower diagonal matrix where to place the parameters.
-            offset = -1 if self.orthogonal_map == "householder" else 0
-            tril_indices = torch.tril_indices(
-                row=self.d, col=self.d, offset=offset, device=params.device
-            )
-            new_params = torch.zeros(
-                (params.size(0), self.d, self.d),
-                dtype=params.dtype,
-                device=params.device,
-            )
-            new_params[:, tril_indices[0], tril_indices[1]] = params
-            params = new_params
+        if self.orthogonal_map == "euler":
+            if not 2 <= self.d <= 3:
+                raise ValueError(f"Must have d = 2 or d = 3 for to generate euler angles. Got d={self.d}")
+            elif self.d == 2:
+                return self.get_2d_rotation(params)
+            else:
+                return self.get_3d_rotation(params)
+
+        # Construct a lower diagonal matrix where to place the parameters.
+        offset = -1 if self.orthogonal_map == "householder" else 0
+        tril_indices = torch.tril_indices(
+            row=self.d, col=self.d, offset=offset, device=params.device
+        )
+        new_params = torch.zeros(
+            (params.size(0), self.d, self.d),
+            dtype=params.dtype,
+            device=params.device,
+        )
+        new_params[:, tril_indices[0], tril_indices[1]] = params
+        params = new_params
 
         if self.orthogonal_map == "matrix_exp" or self.orthogonal_map == "cayley":
             # We just need n x k - k(k-1)/2 parameters
@@ -73,11 +86,11 @@ class Orthogonal(nn.Module):
             A = params - params.transpose(-2, -1)
             # A is skew-symmetric (or skew-hermitian)
             if self.orthogonal_map == "matrix_exp":
-                Q = torch.matrix_exp(A)
+                return torch.matrix_exp(A)
             elif self.orthogonal_map == "cayley":
                 # Computes the Cayley retraction (I+A/2)(I-A/2)^{-1}
                 Id = torch.eye(self.d, dtype=A.dtype, device=A.device)
-                Q = torch.linalg.solve(
+                return torch.linalg.solve(
                     torch.add(Id, A, alpha=-0.5), torch.add(Id, A, alpha=0.5)
                 )
         elif self.orthogonal_map == "householder":
@@ -87,13 +100,6 @@ class Orthogonal(nn.Module):
                 .repeat(params.size(0), 1, 1)
             )
             A = params.tril(diagonal=-1) + eye
-            Q = torch.linalg.householder_product(A)
-        elif self.orthogonal_map == "euler":
-            assert 2 <= self.d <= 3
-            if self.d == 2:
-                Q = self.get_2d_rotation(params)
-            else:
-                Q = self.get_3d_rotation(params)
-        else:
-            raise ValueError(f"Unsupported transformations {self.orthogonal_map}")
-        return Q
+            h, tau = torch.geqrf(A)
+            return torch.linalg.householder_product(h, tau)
+        raise ValueError(f"Unsupported transformations {self.orthogonal_map}")
