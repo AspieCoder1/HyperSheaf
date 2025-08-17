@@ -59,10 +59,13 @@ def test_orthogonal_euler_wrong_param_dim(stalk_dim: int, param_dim: int):
 
     with pytest.raises(
         ValueError,
-        match=re.escape(f"params.size(-1) must be {param_dim} but received the value 10"),
+        match=re.escape(
+            f"params.size(-1) must be {param_dim} but received the value 10"
+        ),
     ):
         x = torch.randn((4, 10)).clip(-1, 1)
         orth_model(x)
+
 
 def test_orthogonal_euler_3d_values_out_of_range():
     orth_model = Orthogonal(d=3, orthogonal_map="euler")
