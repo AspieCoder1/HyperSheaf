@@ -22,7 +22,9 @@ class Orthogonal(nn.Module):
         # assert params.min() >= -1.0 and params.max() <= 1.0
 
         if params.size(-1) != 1:
-            raise ValueError(f"params.size(-1) must be 1 but received the value {params.size(-1)}")
+            raise ValueError(
+                f"params.size(-1) must be 1 but received the value {params.size(-1)}"
+            )
 
         sin = torch.sin(params * 2 * math.pi)
         cos = torch.cos(params * 2 * math.pi)
@@ -31,9 +33,11 @@ class Orthogonal(nn.Module):
     def get_3d_rotation(self, params):
         if params.min() < -1.0 or params.max() > 1.0:
             raise ValueError("params must be in the range [-1, 1]")
-        
+
         if params.size(-1) != 3:
-            raise ValueError(f"params.size(-1) must be 3 but received the value {params.size(-1)}")
+            raise ValueError(
+                f"params.size(-1) must be 3 but received the value {params.size(-1)}"
+            )
 
         alpha = params[:, 0].view(-1, 1) * 2 * math.pi
         beta = params[:, 1].view(-1, 1) * 2 * math.pi
@@ -61,7 +65,9 @@ class Orthogonal(nn.Module):
     def forward(self, params: torch.Tensor) -> torch.Tensor:
         if self.orthogonal_map == "euler":
             if not 2 <= self.d <= 3:
-                raise ValueError(f"Must have d = 2 or d = 3 for to generate euler angles. Got d={self.d}")
+                raise ValueError(
+                    f"Must have d = 2 or d = 3 for to generate euler angles. Got d={self.d}."
+                )
             elif self.d == 2:
                 return self.get_2d_rotation(params)
             else:
