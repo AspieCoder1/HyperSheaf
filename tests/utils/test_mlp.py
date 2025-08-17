@@ -1,7 +1,8 @@
 import pytest
 import torch
 
-from src.hypersheaf.utils.mlp import MLP
+from hypersheaf.utils.mlp import MLP
+
 
 @pytest.mark.parametrize("normalisation", ["bn", "ln", "None"])
 @pytest.mark.parametrize("input_norm", [True, False])
@@ -17,6 +18,7 @@ def test_mlp(normalisation: str, input_norm: bool):
 
     x = torch.randn(4, 2)
     assert mlp(x).shape == (4, 6)
+
 
 def test_mlp_error():
     with pytest.raises(ValueError, match="normalisation must be one of bn, ln or None"):

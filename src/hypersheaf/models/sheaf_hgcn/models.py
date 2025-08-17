@@ -373,10 +373,10 @@ class SheafHyperGCN(nn.Module):
 
                 eye_diag = torch.ones((num_nodes * self.d))
                 A = (
-                        utils.sparse_diagonal(
+                    utils.sparse_diagonal(
                         eye_diag, (num_nodes * self.d, num_nodes * self.d)
                     ).to(A.device)
-                        - A
+                    - A
                 )  # I - A
 
             if self.left_proj:

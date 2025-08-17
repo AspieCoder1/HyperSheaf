@@ -13,7 +13,8 @@ class Orthogonal(nn.Module):
 
     def __init__(self, d, orthogonal_map):
         super().__init__()
-        assert orthogonal_map in ["matrix_exp", "cayley", "householder", "euler"]
+        if orthogonal_map not in ["matrix_exp", "cayley", "householder", "euler"]:
+            raise ValueError(f"Unsupported transformations {orthogonal_map}")
         self.d = d
         self.orthogonal_map = orthogonal_map
 
