@@ -1,7 +1,7 @@
 import torch
 import torch.nn.functional as F
 
-from hyper_sheaf.utils.mlp import MLP
+from src.hypersheaf.utils.mlp import MLP
 from .core import HeteroSheafLearner
 
 

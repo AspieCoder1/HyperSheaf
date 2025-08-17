@@ -2,7 +2,7 @@ import torch
 from torch_scatter import scatter_mul, scatter_add
 
 from .base_builder import BaseHeFeatBuilder
-from hyper_sheaf.utils.mlp import MLP
+from src.hypersheaf.utils.mlp import MLP
 
 
 class CPDecompHeFeatBuilder(BaseHeFeatBuilder):

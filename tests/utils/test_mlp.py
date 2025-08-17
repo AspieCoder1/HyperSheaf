@@ -1,7 +1,7 @@
 import pytest
 import torch
 
-from hyper_sheaf.utils.mlp import MLP
+from src.hypersheaf.utils.mlp import MLP
 
 @pytest.mark.parametrize("normalisation", ["bn", "ln", "None"])
 @pytest.mark.parametrize("input_norm", [True, False])

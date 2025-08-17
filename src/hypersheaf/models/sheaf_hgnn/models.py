@@ -17,8 +17,6 @@ from torch import nn
 from torch_geometric.nn.dense import Linear
 from torch_scatter import scatter_mean
 
-from hyper_sheaf.utils.mlp import MLP
-
 #  This part is for HyperGCN
 from .layers import *
 from .sheaf_builder import (

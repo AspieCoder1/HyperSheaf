@@ -1,9 +1,9 @@
 import torch
 
-from hyper_sheaf.data import HeteroHypergraph
-from hyper_sheaf.feature_builders.input_feats import InputFeatsHeFeatBuilder
-from hyper_sheaf.models.sheaf_hgcn.models import SheafHyperGCN
-from hyper_sheaf.models.sheaf_hgnn.models import SheafHyperGNN
+from hypersheaf.data import HeteroHypergraph
+from hypersheaf.feature_builders.input_feats import InputFeatsHeFeatBuilder
+from hypersheaf.models.sheaf_hgcn.models import SheafHyperGCN
+from hypersheaf.models.sheaf_hgnn import SheafHyperGNN
 
 if __name__ == "__main__":
     device = torch.device("cpu")

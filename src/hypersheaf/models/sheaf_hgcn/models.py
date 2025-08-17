@@ -7,20 +7,20 @@ from torch.nn import functional as F
 from torch_geometric.nn import Linear
 from torch_scatter import scatter_mean, scatter_add
 
-from hyper_sheaf.data import HeteroHypergraph
-from hyper_sheaf.models.sheaf_hgcn.hgcn_sheaf_laplacians import (
+from src.hypersheaf.data import HeteroHypergraph
+from src.hypersheaf.models.sheaf_hgcn.hgcn_sheaf_laplacians import (
     SheafLaplacianDiag,
     SheafLaplacianOrtho,
     SheafLaplacianGeneral,
 )
-from hyper_sheaf.models.sheaf_hgcn.sheaf_builder import (
+from src.hypersheaf.models.sheaf_hgcn.sheaf_builder import (
     HGCNSheafBuilderDiag,
     HGCNSheafBuilderOrtho,
     HGCNSheafBuilderGeneral,
     HGCNSheafBuilderLowRank,
 )
-from hyper_sheaf.utils import utils
-from hyper_sheaf.utils.mlp import MLP
+from src.hypersheaf.utils import utils
+from src.hypersheaf.utils.mlp import MLP
 
 
 class SheafHyperGCN(nn.Module):
@@ -373,10 +373,10 @@ class SheafHyperGCN(nn.Module):
 
                 eye_diag = torch.ones((num_nodes * self.d))
                 A = (
-                    utils.sparse_diagonal(
+                        utils.sparse_diagonal(
                         eye_diag, (num_nodes * self.d, num_nodes * self.d)
                     ).to(A.device)
-                    - A
+                        - A
                 )  # I - A
 
             if self.left_proj:

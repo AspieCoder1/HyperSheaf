@@ -1,7 +1,7 @@
 import numpy as np
 import itertools
 import torch
-from hyper_sheaf.utils import utils
+from src.hypersheaf.utils import utils
 
 from torch_scatter import scatter_add
 

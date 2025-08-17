@@ -21,13 +21,12 @@ A very simple concrete example of a heterogeneous sheaf hypergraph neural networ
 included in `tutorial.py`.
 
 ## Representing heterogeneous hypergraphs
-
 Heterogeneous hypergraphs are represented as a `HeteroHypergraph` object and is
 illustrated by this code from `tutorial.py`.
 
 ```python
 import torch
-from hyper_sheaf.data import HeteroHypergraph
+from hypersheaf.data import HeteroHypergraph
 
 num_nodes = 10
 num_node_types = 2
@@ -67,7 +66,7 @@ If we wish to simply return the hyperedge features included in the `HeteroData` 
 the feature builder would look like the following.
 
 ```python
-from hyper_sheaf.feature_builders.base_builder import BaseHeFeatBuilder
+from src.hypersheaf.feature_builders.base_builder import BaseHeFeatBuilder
 import torch
 
 
@@ -93,28 +92,28 @@ A simple learner that only concatenates the local features such as those used in
 ```python
 import torch
 
-from hyper_sheaf.sheaf_learners.core import HeteroSheafLearner
-from hyper_sheaf.utils.mlp import MLP
+from src.hypersheaf.sheaf_learners.core import HeteroSheafLearner
+from src.hypersheaf.utils.mlp import MLP
 
 
 class LocalConcatSheafLearner(HeteroSheafLearner):
-    def __init__(self, node_feats: int, out_channels: int, hidden_channels: int = 64,
-                 norm: bool = True, act_fn: str = 'relu'):
-        super(LocalConcatSheafLearner, self).__init__(act_fn=act_fn)
-        self.lin = MLP(
-            in_channels=2 * node_feats,
-            out_channels=out_channels,
-            hidden_channels=hidden_channels,
-            num_layers=1,
-            dropout=0.0,
-            normalisation="ln",
-            input_norm=norm,
-        )
+  def __init__(self, node_feats: int, out_channels: int, hidden_channels: int = 64,
+               norm: bool = True, act_fn: str = 'relu'):
+    super(LocalConcatSheafLearner, self).__init__(act_fn=act_fn)
+    self.lin = MLP(
+      in_channels=2 * node_feats,
+      out_channels=out_channels,
+      hidden_channels=hidden_channels,
+      num_layers=1,
+      dropout=0.0,
+      normalisation="ln",
+      input_norm=norm,
+    )
 
-    def predict_sheaf(self, node_feats, he_feats, he_index, node_types, he_types):
-        h_sheaf = torch.cat((node_feats, he_feats), dim=-1)
-        h_sheaf = self.lin(h_sheaf)
-        return h_sheaf
+  def predict_sheaf(self, node_feats, he_feats, he_index, node_types, he_types):
+    h_sheaf = torch.cat((node_feats, he_feats), dim=-1)
+    h_sheaf = self.lin(h_sheaf)
+    return h_sheaf
 
 ```
 

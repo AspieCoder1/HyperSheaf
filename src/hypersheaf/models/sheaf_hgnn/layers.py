@@ -18,8 +18,8 @@ from torch_geometric.nn.conv import MessagePassing
 from torch_geometric.nn.inits import zeros
 from torch_scatter import scatter_add
 
-from hyper_sheaf.utils import utils
-from hyper_sheaf.utils.mlp import MLP
+from src.hypersheaf.utils import utils
+from src.hypersheaf.utils.mlp import MLP
 
 
 def normalisation_matrices(

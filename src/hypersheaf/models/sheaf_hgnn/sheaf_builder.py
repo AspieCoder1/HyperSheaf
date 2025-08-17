@@ -7,17 +7,17 @@ import torch.nn.functional as F
 from torch import nn
 from torch_scatter import scatter_add
 
-from hyper_sheaf.feature_builders.cp_decomp import CPDecompHeFeatBuilder
-from hyper_sheaf.feature_builders.input_feats import InputFeatsHeFeatBuilder
-from hyper_sheaf.feature_builders.neighbour_aggregation import (
+from src.hypersheaf.feature_builders.cp_decomp import CPDecompHeFeatBuilder
+from src.hypersheaf.feature_builders.input_feats import InputFeatsHeFeatBuilder
+from src.hypersheaf.feature_builders.neighbour_aggregation import (
     EquivariantHeFeatBuilder,
     NodeMeanHeFeatBuilder,
 )
-from hyper_sheaf.sheaf_learners.local_concat import LocalConcatSheafLearner
-from hyper_sheaf.sheaf_learners.type_concat import TypeConcatSheafLearner
-from hyper_sheaf.sheaf_learners.type_ensemble import TypeEnsembleSheafLearner
-from hyper_sheaf.utils import utils
-from hyper_sheaf.utils.orthogonal import Orthogonal
+from src.hypersheaf.sheaf_learners.local_concat import LocalConcatSheafLearner
+from src.hypersheaf.sheaf_learners.type_concat import TypeConcatSheafLearner
+from src.hypersheaf.sheaf_learners.type_ensemble import TypeEnsembleSheafLearner
+from src.hypersheaf.utils import utils
+from src.hypersheaf.utils.orthogonal import Orthogonal
 
 
 # helper functions to predict sigma(MLP(x_v || h_e)) varying how thw attributes for hyperedge are computed
