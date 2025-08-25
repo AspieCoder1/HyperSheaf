@@ -1,7 +1,7 @@
 import torch
 import torch.nn.functional as F
 
-from src.hypersheaf.utils.mlp import MLP
+from hypersheaf.utils.mlp import MLP
 from .core import HeteroSheafLearner
 
 
@@ -27,6 +27,8 @@ class TypeConcatSheafLearner(HeteroSheafLearner):
             normalisation="ln",
             input_norm=norm,
         )
+        self.node_feats = node_feats
+        self.out_channels = out_channels
 
     def predict_sheaf(self, node_feats, he_feats, he_index, node_types, he_types):
         node, hyperedge = he_index

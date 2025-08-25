@@ -1,10 +1,11 @@
+import abc
 from abc import abstractmethod
 
 import torch
 import torch.nn.functional as F
 
 
-class HeteroSheafLearner(torch.nn.Module):
+class HeteroSheafLearner(torch.nn.Module, abc.ABC):
     def __init__(self, act_fn):
         super(HeteroSheafLearner, self).__init__()
         self.act_fn = act_fn
@@ -28,3 +29,9 @@ class HeteroSheafLearner(torch.nn.Module):
         if self.act_fn == "elu":
             return F.elu(h_sheaf)
         return h_sheaf
+
+    def __repr__(self):
+        class_arguments = ""
+        if hasattr(self, "node_feats") and hasattr(self, "out_channels"):
+            class_arguments = f"{self.node_feats}, {self.out_channels}"
+        return f"{self.__class__.__name__}({class_arguments})"

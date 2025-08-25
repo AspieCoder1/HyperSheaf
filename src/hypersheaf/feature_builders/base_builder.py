@@ -10,7 +10,9 @@ class BaseHeFeatBuilder(torch.nn.Module, AbstractBaseClass):
         super().__init__()
 
     @abstractmethod
-    def compute_he_features(self, x, he_feats, hyperedge_index):
+    def compute_he_features(
+        self, x, he_feats, hyperedge_index
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         raise NotImplementedError
 
     def forward(self, x, he_feats, hyperedge_index):
