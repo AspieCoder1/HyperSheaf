@@ -45,7 +45,7 @@ if __name__ == "__main__":
     print(out.shape)
 
     model = SheafHyperGCN(
-        V=data.num_nodes,
+        num_nodes=data.num_nodes,
         in_channels=64,
         out_channels=5,
         use_lin2=True,

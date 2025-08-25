@@ -159,6 +159,8 @@ class HGCNSheafBuilderDiag(HGCNSheafBuilder):
         x = x.view(num_nodes, self.d, x.shape[-1]).mean(1)  # N x d x f -> N x f
         e = e.view(num_edges, self.d, e.shape[-1]).mean(1)  # # x d x f -> E x f
 
+        print(f"x.shape: {x.shape}", f"e.shape: {e.shape}")
+
         xs, es = self.compute_node_hyperedge_features(x, e, hyperedge_index)
         h_sheaf = self.predict_sheaf(
             xs, es, hyperedge_index, node_types, hyperedge_types
@@ -291,7 +293,7 @@ class HGCNSheafBuilderOrtho(HGCNSheafBuilder):
         return h_sheaf
 
 
-class HGCNSheafBuilderLowRank(nn.Module):
+class HGCNSheafBuilderLowRank(HGCNSheafBuilder):
     def __init__(
         self,
         stalk_dimension: int,

@@ -136,7 +136,13 @@ def test_sheaf_hgnn_he_feat_type(
     assert out.shape == (hypergraph.num_nodes, 32)
 
 
-def test_sheaf_hgnn_dynamic_sheaf(hypergraph: HeteroHypergraph):
+@pytest.mark.parametrize(
+    "sheaf_type", ["DiagSheafs", "OrthoSheafs", "GeneralSheafs", "LowRankSheafs"]
+)
+def test_sheaf_hgnn_dynamic_sheaf(
+    hypergraph: HeteroHypergraph,
+    sheaf_type: Literal["DiagSheafs", "OrthoSheafs", "GeneralSheafs", "LowRankSheafs"],
+):
     model = SheafHyperGNN(
         in_channels=16,
         out_channels=32,
@@ -144,6 +150,7 @@ def test_sheaf_hgnn_dynamic_sheaf(hypergraph: HeteroHypergraph):
         num_hyperedge_types=hypergraph.num_hyperedge_types,
         use_lin2=True,
         dynamic_sheaf=True,
+        sheaf_type=sheaf_type,
     )
 
     out = model(hypergraph)

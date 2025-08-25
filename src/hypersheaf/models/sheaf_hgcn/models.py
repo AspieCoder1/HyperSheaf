@@ -27,7 +27,7 @@ class SheafHyperGCN(nn.Module):
     # replace hyperedge with edges amax(F_v<e(x_v)) ~ amin(F_v<e(x_v))
     def __init__(
         self,
-        V,
+        num_nodes,
         in_channels,
         out_channels,
         num_layers: int = 2,
@@ -58,7 +58,7 @@ class SheafHyperGCN(nn.Module):
     ):
         super(SheafHyperGCN, self).__init__()
 
-        self.num_nodes = V
+        self.num_nodes = num_nodes
         h = [hidden_channels]
         for i in range(num_layers - 1):
             power = num_layers - i + 2
@@ -94,10 +94,8 @@ class SheafHyperGCN(nn.Module):
         self.hyperedge_attr = None
         self.residual = residual_connections
 
-        if cuda in [0, 1]:
-            self.device = torch.device(
-                "cuda:" + str(cuda) if torch.cuda.is_available() else "cpu"
-            )
+        if cuda in [0, 1] and torch.cuda.is_available():
+            self.device = torch.device("cuda:" + str(cuda))
         else:
             self.device = torch.device("cpu")
 
@@ -349,10 +347,12 @@ class SheafHyperGCN(nn.Module):
         hyperedge_attr = hyperedge_attr.view(
             (hyperedge_attr.shape[0] * self.d, self.MLP_hidden)
         )
+        print(f"{hyperedge_attr.shape=}")
 
         for i, hidden in enumerate(self.layers):
             if i == 0 or self.dynamic_sheaf:
                 # compute the sheaf
+                print(H.shape)
                 sheaf = self.sheaf_builder[i](
                     H, hyperedge_attr, edge_index, data.node_types, data.hyperedge_types
                 )  # N x E x d x d
@@ -364,7 +364,7 @@ class SheafHyperGCN(nn.Module):
                     H, mediators, self.d, edge_index, sheaf
                 )
 
-                A = torch.sparse.FloatTensor(
+                A = torch.sparse_coo_tensor(
                     h_sheaf_index,
                     h_sheaf_attributes,
                     (num_nodes * self.d, num_nodes * self.d),
