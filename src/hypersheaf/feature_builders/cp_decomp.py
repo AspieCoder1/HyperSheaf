@@ -2,7 +2,7 @@ import torch
 from torch_scatter import scatter_mul, scatter_add
 
 from .base_builder import BaseHeFeatBuilder
-from src.hypersheaf.utils.mlp import MLP
+from hypersheaf.utils.mlp import MLP
 
 
 class CPDecompHeFeatBuilder(BaseHeFeatBuilder):
@@ -26,6 +26,7 @@ class CPDecompHeFeatBuilder(BaseHeFeatBuilder):
             normalisation="ln",
             input_norm=norm,
         )
+        self.hidden_channels = hidden_channels
 
     def compute_he_features(self, x, he_feats, hyperedge_index):
         row, col = hyperedge_index
@@ -41,3 +42,6 @@ class CPDecompHeFeatBuilder(BaseHeFeatBuilder):
         es = torch.index_select(e, dim=0, index=col)
 
         return xs, es
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self.hidden_channels})"

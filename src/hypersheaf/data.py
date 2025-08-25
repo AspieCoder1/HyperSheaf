@@ -35,7 +35,7 @@ class HeteroHypergraph(Data):
 
     @property
     def num_hyperedges(self) -> int:
-        return self.edge_index[1].max() + 1 if self.edge_index is not None else 0
+        return int(self.edge_index[1].max()) + 1 if self.edge_index is not None else 0
 
     @property
     def n_x(self):

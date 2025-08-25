@@ -1,11 +1,8 @@
 import torch
-from abc import abstractmethod
-from abc import ABC as AbstractBaseClass
+from abc import abstractmethod, ABC
 
 
-class BaseHeFeatBuilder(torch.nn.Module, AbstractBaseClass):
-    ...
-
+class BaseHeFeatBuilder(torch.nn.Module, ABC):
     def __init__(self):
         super().__init__()
 
@@ -17,3 +14,6 @@ class BaseHeFeatBuilder(torch.nn.Module, AbstractBaseClass):
 
     def forward(self, x, he_feats, hyperedge_index):
         return self.compute_he_features(x, he_feats, hyperedge_index)
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}()"

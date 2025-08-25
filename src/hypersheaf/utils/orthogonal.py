@@ -108,4 +108,3 @@ class Orthogonal(nn.Module):
             A = params.tril(diagonal=-1) + eye
             h, tau = torch.geqrf(A)
             return torch.linalg.householder_product(h, tau)
-        raise ValueError(f"Unsupported transformations {self.orthogonal_map}")

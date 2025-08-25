@@ -4,7 +4,7 @@ import torch.nn.functional as F
 from typing import Callable
 
 from hypersheaf.sheaf_learners.local_concat import LocalConcatSheafLearner
-from helpers import SheafLearnerInput
+from .helpers import SheafLearnerInput
 
 
 @pytest.fixture

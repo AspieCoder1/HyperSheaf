@@ -12,4 +12,4 @@ class SheafLearnerInput:
 
     @property
     def n_x(self):
-        return self.node_feats.size(0)
+        return self.he_index.size(-1)

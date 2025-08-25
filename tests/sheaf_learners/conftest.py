@@ -1,5 +1,5 @@
 import pytest
-from helpers import SheafLearnerInput
+from .helpers import SheafLearnerInput
 
 from hypersheaf.feature_builders.input_feats import InputFeatsHeFeatBuilder
 from hypersheaf.data import HeteroHypergraph

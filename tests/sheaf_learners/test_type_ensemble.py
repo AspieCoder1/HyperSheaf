@@ -5,7 +5,7 @@ from typing import Callable
 
 from hypersheaf.sheaf_learners.type_ensemble import TypeEnsembleSheafLearner
 from hypersheaf.data import HeteroHypergraph
-from helpers import SheafLearnerInput
+from .helpers import SheafLearnerInput
 
 
 @pytest.fixture

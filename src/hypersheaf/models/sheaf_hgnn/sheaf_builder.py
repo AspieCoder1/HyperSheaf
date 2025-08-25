@@ -23,7 +23,7 @@ from src.hypersheaf.utils.orthogonal import Orthogonal
 # helper functions to predict sigma(MLP(x_v || h_e)) varying how thw attributes for hyperedge are computed
 
 
-class SheafBuilder(nn.Module):
+class SheafBuilder(nn.Module, abc.ABC):
     def __init__(
         self,
         stalk_dimension: int,

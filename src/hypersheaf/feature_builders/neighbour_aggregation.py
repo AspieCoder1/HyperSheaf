@@ -2,7 +2,7 @@ import torch
 from torch_scatter import scatter_mean, scatter_add
 
 from .base_builder import BaseHeFeatBuilder
-from src.hypersheaf.utils.mlp import MLP
+from hypersheaf.utils.mlp import MLP
 
 
 class NodeMeanHeFeatBuilder(BaseHeFeatBuilder):
@@ -49,7 +49,7 @@ class EquivariantHeFeatBuilder(BaseHeFeatBuilder):
     def compute_he_features(self, x, he_feats, hyperedge_index):
         row, col = hyperedge_index
         x_e = self.phi(x)
-        # sum(φ(x_v)
+        # sum(φ(x_v))
         e = scatter_add(x_e[row], col, dim=0)
         return torch.index_select(x, dim=0, index=row), torch.index_select(
             e, dim=0, index=col
