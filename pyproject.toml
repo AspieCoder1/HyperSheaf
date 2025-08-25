@@ -16,6 +16,7 @@ dependencies = [
     "torch-scatter",
     "torch-sparse",
     "torch-spline-conv",
+    "strenum>=0.4.15",
 ]
 
 [build-system]
@@ -67,6 +68,7 @@ convention="google"
 [tool.coverage.report]
 exclude_also = [
     'def __repr__',
+    'def reset_parameters',
     'if self.debug:',
     'if settings.DEBUG',
     'raise AssertionError',

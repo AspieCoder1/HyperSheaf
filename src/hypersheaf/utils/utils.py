@@ -311,7 +311,7 @@ def sparse_diagonal(diag, shape):
     assert r == c
     indexes = torch.arange(r).to(diag.device)
     indexes = torch.stack([indexes, indexes], dim=0)
-    return torch.sparse.FloatTensor(indexes, diag)
+    return torch.sparse_coo_tensor(indexes, diag)
 
 
 def generate_indices_general(indexes, d):

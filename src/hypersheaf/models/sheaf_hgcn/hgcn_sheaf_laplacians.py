@@ -1,7 +1,7 @@
 import numpy as np
 import itertools
 import torch
-from src.hypersheaf.utils import utils
+from hypersheaf.utils import utils
 
 from torch_scatter import scatter_add
 
@@ -38,13 +38,10 @@ def reduce_graph(X_reduced, m, d, edge_index):
     receivers_pairs = torch.stack(
         (receivers_idx, receivers_nodes, receivers_hedge), dim=-1
     )
-    key_func = (
-        lambda x: x[2]
-    )  # sort them according to the hyperedge such that we can extract the nodes from each hyperedge
 
     receivers_pairs = receivers_pairs.detach().cpu().numpy()
     receivers_pairs_sort = sorted(
-        receivers_pairs, key=key_func
+        receivers_pairs, key=lambda x: x[2]
     )  # rearrange the tuples to be in asc order by receivers_group
 
     X_hedge = X_reduced  # n x d xreduce graph f
@@ -66,7 +63,7 @@ def reduce_graph(X_reduced, m, d, edge_index):
     p_1_np = p_1.detach().cpu().numpy()
     p_2_np = p_2.detach().cpu().numpy()
 
-    for _, group in itertools.groupby(receivers_pairs_sort, key_func):
+    for _, group in itertools.groupby(receivers_pairs_sort, lambda x: x[2]):
         hyperedge = np.array(list(group)).astype(int)
         hyperedge_nodes = hyperedge[:, 1]  # nodes that are part of the crt hyperedge
         hyperedge_pos = hyperedge[
@@ -156,16 +153,15 @@ def reduce_graph(X_reduced, m, d, edge_index):
         .cpu()
         .numpy()
     )
-    key_func_diag = lambda x: x[1]  # this type sort according to the nodes
     receivers_pairs_sort_diag = sorted(
-        receivers_pairs_diag, key=key_func_diag
+        receivers_pairs_diag, key=lambda x: x[1]
     )  # rearrange the tuples to be in asc order by receivers_group
 
     edges_idx_diag = []
     all_contained_hyperedges = []
 
     idx = 0
-    for _, group in itertools.groupby(receivers_pairs_sort_diag, key_func_diag):
+    for _, group in itertools.groupby(receivers_pairs_sort_diag, lambda x: x[1]):
         # see all hyperedges e one node is part of:
         contained_hyperedges = np.array(list(group)).astype(int)
         node_idx = contained_hyperedges[:, 1][

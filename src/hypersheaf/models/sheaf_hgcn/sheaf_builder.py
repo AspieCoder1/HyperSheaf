@@ -4,16 +4,16 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
-from src.hypersheaf.feature_builders.cp_decomp import CPDecompHeFeatBuilder
-from src.hypersheaf.feature_builders.input_feats import InputFeatsHeFeatBuilder
-from src.hypersheaf.feature_builders.neighbour_aggregation import (
+from hypersheaf.feature_builders.cp_decomp import CPDecompHeFeatBuilder
+from hypersheaf.feature_builders.input_feats import InputFeatsHeFeatBuilder
+from hypersheaf.feature_builders.neighbour_aggregation import (
     EquivariantHeFeatBuilder,
     NodeMeanHeFeatBuilder,
 )
-from src.hypersheaf.sheaf_learners.local_concat import LocalConcatSheafLearner
-from src.hypersheaf.sheaf_learners.type_concat import TypeConcatSheafLearner
-from src.hypersheaf.sheaf_learners.type_ensemble import TypeEnsembleSheafLearner
-from src.hypersheaf.utils.orthogonal import Orthogonal
+from hypersheaf.sheaf_learners.local_concat import LocalConcatSheafLearner
+from hypersheaf.sheaf_learners.type_concat import TypeConcatSheafLearner
+from hypersheaf.sheaf_learners.type_ensemble import TypeEnsembleSheafLearner
+from hypersheaf.utils.orthogonal import Orthogonal
 
 
 class HGCNSheafBuilder(nn.Module):

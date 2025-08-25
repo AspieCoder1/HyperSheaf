@@ -7,20 +7,20 @@ from torch.nn import functional as F
 from torch_geometric.nn import Linear
 from torch_scatter import scatter_mean, scatter_add
 
-from src.hypersheaf.data import HeteroHypergraph
-from src.hypersheaf.models.sheaf_hgcn.hgcn_sheaf_laplacians import (
+from hypersheaf.data import HeteroHypergraph
+from hypersheaf.models.sheaf_hgcn.hgcn_sheaf_laplacians import (
     SheafLaplacianDiag,
     SheafLaplacianOrtho,
     SheafLaplacianGeneral,
 )
-from src.hypersheaf.models.sheaf_hgcn.sheaf_builder import (
+from hypersheaf.models.sheaf_hgcn.sheaf_builder import (
     HGCNSheafBuilderDiag,
     HGCNSheafBuilderOrtho,
     HGCNSheafBuilderGeneral,
     HGCNSheafBuilderLowRank,
 )
-from src.hypersheaf.utils import utils
-from src.hypersheaf.utils.mlp import MLP
+from hypersheaf.utils import utils
+from hypersheaf.utils.mlp import MLP
 
 
 class SheafHyperGCN(nn.Module):
@@ -57,14 +57,13 @@ class SheafHyperGCN(nn.Module):
         **_kwargs,
     ):
         super(SheafHyperGCN, self).__init__()
-        d, l, c = in_channels, num_layers, out_channels
 
         self.num_nodes = V
         h = [hidden_channels]
-        for i in range(l - 1):
-            power = l - i + 2
+        for i in range(num_layers - 1):
+            power = num_layers - i + 2
             h.append(2**power)
-        h.append(c)
+        h.append(out_channels)
 
         reapproximate = False  # for HyperGCN we take care of this via dynamic_sheaf
 
@@ -124,7 +123,7 @@ class SheafHyperGCN(nn.Module):
                         normalisation="ln",
                         input_norm=self.norm,
                     )
-                    for i in range(l)
+                    for i in range(num_layers)
                 ]
             )
 
@@ -160,7 +159,7 @@ class SheafHyperGCN(nn.Module):
         self.use_lin2 = use_lin2
 
         if self.dynamic_sheaf:
-            for i in range(1, l):
+            for i in range(1, num_layers):
                 self.sheaf_builder.append(
                     ModelSheaf(
                         stalk_dimension=stalk_dimension,
@@ -179,11 +178,11 @@ class SheafHyperGCN(nn.Module):
         self.layers = nn.ModuleList(
             [
                 utils.HyperGraphConvolution(h[i], h[i + 1], reapproximate, cuda)
-                for i in range(l)
+                for i in range(num_layers)
             ]
         )
-        self.do, self.l = dropout, num_layers
-        self.m = mediators
+        self.dropout, self.num_layers = dropout, num_layers
+        self.mediators = mediators
 
     def reset_parameters(self):
         for layer in self.layers:
@@ -322,7 +321,11 @@ class SheafHyperGCN(nn.Module):
         """
         an l-layer GCN
         """
-        do, l, m = self.do, self.l, self.m
+        dropout_rate, num_layers, mediators = (
+            self.dropout,
+            self.num_layers,
+            self.mediators,
+        )
         H = data.x
 
         num_nodes = data.x.shape[0]
@@ -360,7 +363,7 @@ class SheafHyperGCN(nn.Module):
                 # with nondiagonal terms -F_v<e(x_v)^T F_w<e(x_w)
                 # and diagonal terms \sum_e F_v<e(x_v)^T F_v<e(x_v)
                 h_sheaf_index, h_sheaf_attributes = self.Laplacian(
-                    H, m, self.d, edge_index, sheaf
+                    H, mediators, self.d, edge_index, sheaf
                 )
 
                 A = torch.sparse.FloatTensor(
@@ -384,9 +387,9 @@ class SheafHyperGCN(nn.Module):
                 H = self.lin_left_proj[i](H)
                 H = H.reshape(-1, num_nodes * self.d).t()
 
-            H = F.elu(hidden(A, H, m))
-            if i < l - 1:
-                H = F.dropout(H, do, training=self.training)
+            H = F.elu(hidden(A, H, mediators))
+            if i < num_layers - 1:
+                H = F.dropout(H, dropout_rate, training=self.training)
 
         H = H.view(self.num_nodes, -1)  # Nd x out_channels -> Nx(d*out_channels)
         if self.use_lin2:

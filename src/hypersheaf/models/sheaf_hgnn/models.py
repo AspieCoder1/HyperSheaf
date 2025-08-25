@@ -16,16 +16,22 @@ import torch.nn.functional as F
 from torch import nn
 from torch_geometric.nn.dense import Linear
 from torch_scatter import scatter_mean
+import torch
 
 #  This part is for HyperGCN
-from .layers import *
+from .layers import (
+    HyperDiffusionGeneralSheafConv,
+    HyperDiffusionOrthoSheafConv,
+    HyperDiffusionDiagSheafConv,
+)
 from .sheaf_builder import (
     SheafBuilderDiag,
     SheafBuilderOrtho,
     SheafBuilderGeneral,
     SheafBuilderLowRank,
 )
-from ...data import HeteroHypergraph
+from hypersheaf.utils.mlp import MLP
+from hypersheaf.data import HeteroHypergraph
 
 
 class SheafHyperGNN(nn.Module):
@@ -61,9 +67,9 @@ class SheafHyperGNN(nn.Module):
         he_feat_type: Literal["var1", "var2", "var3", "cp_decomp"] = "var1",
         sheaf_dropout: bool = False,
         rank: int = 2,
-        is_vshae: bool = False,
         num_node_types: int = 6,
         num_hyperedge_types: int = 3,
+        bias: bool = True,
         **_kwargs,
     ):
         super(SheafHyperGNN, self).__init__()
@@ -73,6 +79,11 @@ class SheafHyperGNN(nn.Module):
         self.num_features = in_channels
         self.MLP_hidden = hidden_channels
         self.d = stalk_dimension  # dimension of the stalks
+
+        if init_hedge not in ["rand", "avg"]:
+            raise ValueError(
+                "Invalid hyperedge attribute initialization type. Must be 'rand' or 'avg'."
+            )
         self.init_hedge = (
             init_hedge  # how to initialise hyperedge attributes: avg or rand
         )
@@ -86,15 +97,12 @@ class SheafHyperGNN(nn.Module):
             dynamic_sheaf  # if True, theb sheaf changes from one layer to another
         )
         self.residual = residual_connections
-        self.is_vshae = is_vshae
         self.he_feat_type = he_feat_type
         self.pred_block = sheaf_learner
 
         self.hyperedge_attr = None
-        if cuda in [0, 1]:
-            self.device = torch.device(
-                "cuda:" + str(cuda) if torch.cuda.is_available() else "cpu"
-            )
+        if cuda in [0, 1] and torch.cuda.is_available():
+            self.device = torch.device("cuda:" + str(cuda))
         else:
             self.device = torch.device("cpu")
 
@@ -133,6 +141,7 @@ class SheafHyperGNN(nn.Module):
                 left_proj=self.left_proj,
                 norm=self.norm,
                 residual=self.residual,
+                bias=bias,
             )
         )
 
@@ -147,32 +156,11 @@ class SheafHyperGNN(nn.Module):
                 sheaf_special_head=sheaf_special_head,
                 sheaf_learner=sheaf_learner,
                 sheaf_dropout=sheaf_dropout,
-                sheaf_normtype=self.norm,
+                sheaf_normtype=self.norm_type,
                 he_feat_type=he_feat_type,
                 num_edge_types=num_hyperedge_types,
                 num_node_types=num_node_types,
             )
-        )
-
-        self.mu_encoder = ModelConv(
-            self.MLP_hidden,
-            self.MLP_hidden,
-            d=self.d,
-            device=self.device,
-            norm_type=self.norm_type,
-            left_proj=self.left_proj,
-            norm=self.norm,
-            residual=self.residual,
-        )
-        self.logstd_encoder = ModelConv(
-            self.MLP_hidden,
-            self.MLP_hidden,
-            d=self.d,
-            device=self.device,
-            norm_type=self.norm_type,
-            left_proj=self.left_proj,
-            norm=self.norm,
-            residual=self.residual,
         )
 
         for _ in range(self.num_layers - 1):
@@ -220,16 +208,16 @@ class SheafHyperGNN(nn.Module):
         self.lin.reset_parameters()
         self.lin2.reset_parameters()
 
-    def init_hyperedge_attr(self, type, num_edges=None, x=None, hyperedge_index=None):
+    def init_hyperedge_attr(
+        self, type, num_edges=None, x=None, hyperedge_index=None
+    ) -> torch.Tensor:
         # initialize hyperedge attributes either random or as the average of the nodes
         if type == "rand":
             hyperedge_attr = torch.randn((num_edges, self.num_features)).to(self.device)
-        elif type == "avg":
+        else:
             hyperedge_attr = scatter_mean(
                 x[hyperedge_index[0]], hyperedge_index[1], dim=0
             )
-        else:
-            hyperedge_attr = None
         return hyperedge_attr
 
     def forward(self, data: HeteroHypergraph):
@@ -290,26 +278,6 @@ class SheafHyperGNN(nn.Module):
             num_nodes=num_nodes,
             num_edges=num_edges,
         )
-        if self.is_vshae:
-            mu = F.elu(
-                self.mu_encoder(
-                    x,
-                    hyperedge_index=h_sheaf_index,
-                    alpha=h_sheaf_attributes,
-                    num_nodes=num_nodes,
-                    num_edges=num_edges,
-                )
-            )
-            logstd = F.elu(
-                self.logstd_encoder(
-                    x,
-                    hyperedge_index=h_sheaf_index,
-                    alpha=h_sheaf_attributes,
-                    num_nodes=num_nodes,
-                    num_edges=num_edges,
-                )
-            )
-            return mu.view(num_nodes, -1), logstd.view(num_nodes, -1)
 
         x = x.view(num_nodes, -1)  # Nd x out_channels -> Nx(d*out_channels)
         if self.use_lin2:
