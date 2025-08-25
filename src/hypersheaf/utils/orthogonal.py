@@ -9,7 +9,8 @@ from torch import nn
 
 class Orthogonal(nn.Module):
     """from https://github.com/twitter-research/neural-sheaf-diffusion/blob/12542551219235f2f945c9603a22d0e27fd8fe10/models/orthogonal.py#L11
-    Based on https://pytorch.org/docs/stable/_modules/torch/nn/utils/parametrizations.html#orthogonal"""
+    Based on https://pytorch.org/docs/stable/_modules/torch/nn/utils/parametrizations.html#orthogonal.
+    """
 
     def __init__(self, d: int, orthogonal_map: str):
         super().__init__()
@@ -66,7 +67,8 @@ class Orthogonal(nn.Module):
         if self.orthogonal_map == "euler":
             if not 2 <= self.d <= 3:
                 raise ValueError(
-                    f"Must have d = 2 or d = 3 for to generate euler angles. Got d={self.d}."
+                    f"Must have d = 2 or d = 3 for to generate euler angles. "
+                    f"Got d={self.d}."
                 )
             elif self.d == 2:
                 return self.get_2d_rotation(params)

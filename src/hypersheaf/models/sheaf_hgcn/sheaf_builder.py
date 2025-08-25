@@ -37,7 +37,9 @@ class HGCNSheafBuilder(nn.Module):
             sheaf_learner  # pick the way hyperedge feartures are computed
         )
         self.sheaf_dropout = sheaf_dropout
-        self.special_head = sheaf_special_head  # add a head having just 1 on the diagonal. this should be similar to the normal hypergraph conv
+        # add a head having just 1 on the diagonal. this should be similar to the normal
+        # hypergraph conv
+        self.special_head = sheaf_special_head
         self.d = stalk_dimension  # stalk dinension
         self.MLP_hidden = hidden_channels
         self.norm = allset_input_norm
@@ -119,10 +121,7 @@ class HGCNSheafBuilderDiag(HGCNSheafBuilder):
         he_feat_type: str = "var1",
         **_kwargs,
     ):
-        """
-        hidden_dim overwrite the self.MLP_hidden used in the normal sheaf HNN
-        """
-
+        """hidden_dim overwrite the self.MLP_hidden used in the normal sheaf HNN."""
         super(HGCNSheafBuilderDiag, self).__init__(
             stalk_dimension=stalk_dimension,
             hidden_channels=hidden_channels,
@@ -149,11 +148,9 @@ class HGCNSheafBuilderDiag(HGCNSheafBuilder):
 
     # this is exclusively for diagonal sheaf
     def forward(self, x, e, hyperedge_index, node_types, hyperedge_types):
-        """tmp
+        """Tmp
         x: Nd x f -> N x f
-        e: Ed x f -> E x f
-        -> (concat) N x E x (d+1)F -> (linear project) N x E x d (the elements on the diagonal of each dxd block)
-        -> (reshape) (Nd x Ed) with NxE diagonal blocks of dimension dxd
+        e: Ed x f -> E x f.
 
         """
         num_nodes = x.shape[0] // self.d
@@ -216,14 +213,11 @@ class HGCNSheafBuilderGeneral(HGCNSheafBuilder):
 
     # this is exclusively for diagonal sheaf
     def forward(self, x, e, hyperedge_index, node_types, hyperedge_types):
-        """tmp
+        """Tmp
         x: Nd x f -> N x f
-        e: Ed x f -> E x f
-        -> (concat) N x E x (d+1)F -> (linear project) N x E x d (the elements on the diagonal of each dxd block)
-        -> (reshape) (Nd x Ed) with NxE diagonal blocks of dimension dxd
+        e: Ed x f -> E x f.
 
         """
-
         num_nodes = x.shape[0] // self.d
         num_edges = hyperedge_index[1].max().item() + 1
         x = x.view(num_nodes, self.d, x.shape[-1]).mean(1)  # N x d x f -> N x f
@@ -276,14 +270,11 @@ class HGCNSheafBuilderOrtho(HGCNSheafBuilder):
 
     # this is exclusively for diagonal sheaf
     def forward(self, x, e, hyperedge_index, node_types, hyperedge_types):
-        """tmp
+        """Tmp
         x: Nd x f -> N x f
-        e: Ed x f -> E x f
-        -> (concat) N x E x (d+1)F -> (linear project) N x E x d (the elements on the diagonal of each dxd block)
-        -> (reshape) (Nd x Ed) with NxE diagonal blocks of dimension dxd
+        e: Ed x f -> E x f.
 
         """
-
         num_nodes = x.shape[0] // self.d
         num_edges = hyperedge_index[1].max().item() + 1
         x = x.view(num_nodes, self.d, x.shape[-1]).mean(1)  # N x d x f -> N x f
@@ -347,14 +338,10 @@ class HGCNSheafBuilderLowRank(nn.Module):
 
     # this is exclusively for diagonal sheaf
     def forward(self, x, e, hyperedge_index, node_types, hyperedge_types):
-        """tmp
+        """Tmp
         x: Nd x f -> N x f
-        e: Ed x f -> E x f
-        -> (concat) N x E x (d+1)F -> (linear project) N x E x d (the elements on the diagonal of each dxd block)
-        -> (reshape) (Nd x Ed) with NxE diagonal blocks of dimension dxd
-
+        e: Ed x f -> E x f.
         """
-
         num_nodes = x.shape[0] // self.d
         num_edges = hyperedge_index[1].max().item() + 1
         x = x.view(num_nodes, self.d, x.shape[-1]).mean(1)  # N x d x f -> N x f

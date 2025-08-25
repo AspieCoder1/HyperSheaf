@@ -6,9 +6,7 @@
 #
 # Distributed under terms of the MIT license.
 
-"""
-This script contains all models in our paper.
-"""
+"""This script contains all models in our paper."""
 
 from typing import Literal
 
@@ -35,10 +33,9 @@ from hypersheaf.data import HeteroHypergraph
 
 
 class SheafHyperGNN(nn.Module):
-    """
-    This is a Hypergraph Sheaf Model with
+    """This is a Hypergraph Sheaf Model with
     the dxd blocks in H_BIG associated to each pair (node, hyperedge)
-    being **diagonal**
+    being **diagonal**.
 
     """
 
@@ -82,7 +79,7 @@ class SheafHyperGNN(nn.Module):
 
         if init_hedge not in ["rand", "avg"]:
             raise ValueError(
-                "Invalid hyperedge attribute initialization type. Must be 'rand' or 'avg'."
+                "Invalid hyperedge attribute initialization type. Must be 'rand' or 'avg'."  # noqa: E501
             )
         self.init_hedge = (
             init_hedge  # how to initialise hyperedge attributes: avg or rand
@@ -119,7 +116,8 @@ class SheafHyperGNN(nn.Module):
         self.sheaf_type = sheaf_type
 
         # define the model and sheaf generator according to the type of sheaf wanted
-        # The diuffusion does not change, however tha implementation for diag and ortho is more efficient
+        # The diffusion does not change, however tha implementation for diag and ortho
+        # is more efficient
         if sheaf_type == "DiagSheafs":
             ModelSheaf, ModelConv = SheafBuilderDiag, HyperDiffusionDiagSheafConv
         elif sheaf_type == "OrthoSheafs":
@@ -177,7 +175,8 @@ class SheafHyperGNN(nn.Module):
                     residual=self.residual,
                 )
             )
-            # Model to generate the reduction maps if the sheaf changes from one layer to another
+            # Model to generate the reduction maps if the sheaf changes from one layer
+            # to another
             if self.dynamic_sheaf:
                 self.sheaf_builder.append(
                     ModelSheaf(
@@ -226,7 +225,8 @@ class SheafHyperGNN(nn.Module):
         num_nodes = data.x.shape[0]  # data.edge_index[0].max().item() + 1
         num_edges = data.edge_index[1].max().item() + 1
 
-        # if we are at the first epoch, initialise the attribute, otherwise use the previous ones
+        # if we are at the first epoch, initialise the attribute, otherwise use the
+        # previous ones
         if self.hyperedge_attr is None:
             if hasattr(data, "hyperedge_attr"):
                 self.hyperedge_attr = data.hyperedge_attr
@@ -238,7 +238,8 @@ class SheafHyperGNN(nn.Module):
                     hyperedge_index=edge_index,
                 )
 
-        # expand the input N x num_features -> Nd x num_features such that we can apply the propagation
+        # expand the input N x num_features -> Nd x num_features such that we can apply
+        # the propagation
         x = self.lin(x)
         x = x.view((x.shape[0] * self.d, self.MLP_hidden))  # (N * d) x num_features
 
@@ -248,7 +249,6 @@ class SheafHyperGNN(nn.Module):
         )
 
         for i, conv in enumerate(self.convs[:-1]):
-            # infer the sheaf as a sparse incidence matrix Nd x Ed, with each block being diagonal
             if i == 0 or self.dynamic_sheaf:
                 h_sheaf_index, h_sheaf_attributes = self.sheaf_builder[i](
                     x, hyperedge_attr, edge_index, data.node_types, data.hyperedge_types
@@ -265,7 +265,6 @@ class SheafHyperGNN(nn.Module):
             )
             x = F.dropout(x, p=self.dropout, training=self.training)
 
-        # infer the sheaf as a sparse incidence matrix Nd x Ed, with each block being diagonal
         if len(self.convs) == 1 or self.dynamic_sheaf:
             h_sheaf_index, h_sheaf_attributes = self.sheaf_builder[-1](
                 x, hyperedge_attr, edge_index, data.node_types, data.hyperedge_types

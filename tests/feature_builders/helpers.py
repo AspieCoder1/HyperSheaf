@@ -9,7 +9,7 @@ def are_he_feats_permutation_invariant(
     hypergraph: HeteroHypergraph,
     permuted_hypergraph: HeteroHypergraph,
 ) -> bool:
-    """Checks if the hyperedge features are permutation invariant"""
+    """Checks if the hyperedge features are permutation invariant."""
     _, es = feat_builder(
         hypergraph.x, hypergraph.hyperedge_features, hypergraph.hyperedge_index
     )
@@ -26,7 +26,7 @@ def are_node_features_permutation_invariant(
     hypergraph: HeteroHypergraph,
     permuted_hypergraph: HeteroHypergraph,
 ) -> bool:
-    """Checks if the node features are permutation invariant"""
+    """Checks if the node features are permutation invariant."""
     xs, _ = feat_builder(
         hypergraph.x, hypergraph.hyperedge_features, hypergraph.hyperedge_index
     )

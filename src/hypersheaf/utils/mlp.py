@@ -3,7 +3,7 @@ from torch.nn import functional as F
 
 
 class MLP(nn.Module):
-    """adapted from https://github.com/CUAI/CorrectAndSmooth/blob/master/gen_models.py"""
+    """adapted from https://github.com/CUAI/CorrectAndSmooth/blob/master/gen_models.py."""
 
     def __init__(
         self,

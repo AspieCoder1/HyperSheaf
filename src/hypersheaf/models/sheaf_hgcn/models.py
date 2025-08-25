@@ -318,9 +318,7 @@ class SheafHyperGCN(nn.Module):
         return A
 
     def forward(self, data: HeteroHypergraph):
-        """
-        an l-layer GCN
-        """
+        """An l-layer GCN."""
         dropout_rate, num_layers, mediators = (
             self.dropout,
             self.num_layers,

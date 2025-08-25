@@ -9,8 +9,7 @@ from torch_scatter import scatter_add
 
 
 def reduce_graph(X_reduced, m, d, edge_index):
-    """
-    X_reduced: nnz x d x f
+    r"""X_reduced: nnz x d x f.
 
     given some features X extract for each hyperedge in edge_index
     just edges connecting min to max
@@ -18,9 +17,12 @@ def reduce_graph(X_reduced, m, d, edge_index):
     If m also connect them to mediators.
 
     Return:
-    edges_idx: idx in nnz array for edges for the graph assoc with the hyperedge: used to select F_v<e F_w<e
-    edges_idx_diag: idx in the nnz array for edges corresp to the diagonal used to select F_v<e F_v<e^T
-    all_contained_hyperedges: idx for the hyperedges containing each node (help in the scatter phase): used to compute \sum_e F_v<e F_v<e^T
+    edges_idx: idx in nnz array for edges for the graph assoc with the hyperedge: used
+     to select F_v<e F_w<e
+    edges_idx_diag: idx in the nnz array for edges corresp to the diagonal used to
+     select F_v<e F_v<e^T
+    all_contained_hyperedges: idx for the hyperedges containing each node
+    (help in the scatter phase): used to compute \sum_e F_v<e F_v<e^T
     hgcn_edges: all the new hyperedges
     """
     # X_reduces: nx x f
@@ -49,7 +51,8 @@ def reduce_graph(X_reduced, m, d, edge_index):
 
     p = (
         X_hedge @ rv
-    )  # dot product on second axis to get rid of the channels --  preserve the idea from HyperGCN
+    )  # dot product on second axis to get rid of the channels --  preserve the idea
+    # from HyperGCN
     p = p.squeeze(-1)
 
     p = p.reshape(row.shape[0], d)  # nnz x d
@@ -68,7 +71,8 @@ def reduce_graph(X_reduced, m, d, edge_index):
         hyperedge_nodes = hyperedge[:, 1]  # nodes that are part of the crt hyperedge
         hyperedge_pos = hyperedge[
             :, 0
-        ]  # position in the nnz vector corresponding to each (node, hyperedge) pair for the crt hyperedge
+        ]  # position in the nnz vector corresponding to each (node, hyperedge) pair
+        # for the crt hyperedge
 
         p_1_partial = p_1_np[:, hyperedge_pos]
         p_2_partial = p_2_np[:, :, hyperedge_pos]
@@ -85,11 +89,13 @@ def reduce_graph(X_reduced, m, d, edge_index):
         Se, Ie = (
             hyperedge_nodes[s],
             hyperedge_nodes[i],
-        )  # these are the nodes that are part of the hyperedge. useful when drawing the edge
+        )  # these are the nodes that are part of the hyperedge. useful when drawing
+        # the edge
         S_idx, I_idx = (
             hyperedge_pos[s],
             hyperedge_pos[i],
-        )  # these are the position in the  nnz vector: (node, edge) pair. Usefull when extracting sheaf features corresponding to  pairs
+        )  # these are the position in the  nnz vector: (node, edge) pair. Useful when
+        # extracting sheaf features corresponding to  pairs
 
         # two stars with mediators
         c = 2 * len(hyperedge_pos) - 3  # normalisation constant
@@ -97,7 +103,8 @@ def reduce_graph(X_reduced, m, d, edge_index):
         if m:
             # connect the supremum (Se) with the infimum (Ie)
             edges.extend([[Se, Ie], [Ie, Se]])
-            # also keep track of indexes in the nnz vector such that we can extract the sheaf F
+            # also keep track of indexes in the nnz vector such that we can extract
+            # the sheaf F
             edges_idx.extend([[S_idx, I_idx], [I_idx, S_idx]])
 
             if (Se, Ie) not in weights:
@@ -109,7 +116,9 @@ def reduce_graph(X_reduced, m, d, edge_index):
             weights[(Ie, Se)] += float(1 / c)
 
             # # connect the supremum (Se) and the infimum (Ie) with each mediator
-            for mediator_idx, mediator_e in zip(hyperedge_pos, hyperedge_nodes):
+            for mediator_idx, mediator_e in zip(
+                hyperedge_pos, hyperedge_nodes, strict=False
+            ):
                 if mediator_e != Se and mediator_e != Ie:
                     edges.extend(
                         [
@@ -119,7 +128,8 @@ def reduce_graph(X_reduced, m, d, edge_index):
                             [mediator_e, Ie],
                         ]
                     )
-                    # also keep track of indexes in the nnz vector such that we can extract the sheaf F
+                    # also keep track of indexes in the nnz vector such that we can
+                    # extract the sheaf F
                     edges_idx.extend(
                         [
                             [S_idx, mediator_idx],
@@ -132,7 +142,8 @@ def reduce_graph(X_reduced, m, d, edge_index):
 
         else:
             edges.extend([[Se, Ie], [Ie, Se]])
-            # also keep track of indexes in the nnz vector such that we can extract the sheaf F
+            # also keep track of indexes in the nnz vector such that we can
+            # extract the sheaf F
             edges_idx.extend([[S_idx, I_idx], [I_idx, S_idx]])
 
             e = len(hyperedge_pos)
@@ -169,10 +180,13 @@ def reduce_graph(X_reduced, m, d, edge_index):
         ]  # all node idxes should be the same due to grouping
         contained_hyperedges = contained_hyperedges[
             :, 0
-        ]  # indexes in the nnz vectors for all (node, e) when node is part of hyperedge e
+        ]  # indexes in the nnz vectors for all (node, e) when node is part of
+        # hyperedge e
 
         edges.extend([[node_idx, node_idx]])
-        edges_idx_diag.extend(list(zip(contained_hyperedges, contained_hyperedges)))
+        edges_idx_diag.extend(
+            list(zip(contained_hyperedges, contained_hyperedges, strict=False))
+        )
         all_contained_hyperedges.extend(
             [idx] * len(contained_hyperedges)
         )  # keep track of what elements I need to aggergate for each node
@@ -191,18 +205,16 @@ def reduce_graph(X_reduced, m, d, edge_index):
     return edges_idx, edges_idx_diag, all_contained_hyperedges, hgcn_edges
 
 
-def SheafLaplacianDiag(H, m, d, edge_index, sheaf, E=None):
-    """
-    approximates the E defined by the E Laplacian with/without mediators
+def SheafLaplacianDiag(H, m, d, edge_index, sheaf):
+    """Approximates the E defined by the E Laplacian with/without mediators.
 
-    arguments:
+    Arguments:
     H: (num_nodes*d) x f
     m: true or False for using mediators
-    d: dim of stack
+    d: dim of sheaf stalk
     edge_index: 2xnnz
     sheaf: nnz x d (for diagonal sheaf)
     """
-
     F = sheaf
     num_nodes = H.shape[0] // d
     MLP_hidden = H.shape[-1]
@@ -226,9 +238,11 @@ def SheafLaplacianDiag(H, m, d, edge_index, sheaf, E=None):
     X_reduced = X_reduced.reshape(-1, MLP_hidden, d)  # nnz x f x d
     X_reduced = X_reduced.permute(0, 2, 1)  # nnz x d x f
 
-    # return edges_idx: idx in nnz array for edges for the graph assoc with the hyperedge
+    # return edges_idx: idx in nnz array for edges for the graph assoc with the
+    # hyperedge
     # edges_idx_diag: idx in the nnz array for edges corresp to the diagonal
-    # all_contained_hyperedges: idx for the hyperedges containing each node (help in the scatter phase)
+    # all_contained_hyperedges: idx for the hyperedges containing each node
+    # (help in the scatter phase)
     # hgcn_edges: all the new hyperedges
     edges_idx, edges_idx_diag, all_contained_hyperedges, hgcn_edges = reduce_graph(
         X_reduced, m, d, edge_index
@@ -243,7 +257,8 @@ def SheafLaplacianDiag(H, m, d, edge_index, sheaf, E=None):
     F_source_diag = torch.index_select(F, dim=0, index=edges_idx_diag[0])
     F_dest_diag = torch.index_select(F, dim=0, index=edges_idx_diag[1])
     attributes_diag = F_source_diag * F_dest_diag
-    # for each selfloop (x,x) aggregate the reduction for all hyperedges that node is part of sum_e F_v<e(X_v)^T F_v<e(X_v)
+    # for each selfloop (x,x) aggregate the reduction for all hyperedges that node is
+    # part of sum_e F_v<e(X_v)^T F_v<e(X_v)
     attributes_diag = scatter_add(attributes_diag, all_contained_hyperedges, dim=0)
     attributes = torch.concat(
         [attributes, attributes_diag], axis=0
@@ -263,12 +278,12 @@ def SheafLaplacianDiag(H, m, d, edge_index, sheaf, E=None):
     return h_sheaf_index, h_sheaf_attributes
 
 
-def SheafLaplacianGeneral(H, m, d, edge_index, sheaf, E=None):
-    """
-    approximates the E defined by the E Laplacian with/without mediators
+def SheafLaplacianGeneral(H, m, d, edge_index, sheaf):
+    """Approximates the E defined by the E Laplacian with/without mediators.
 
-    arguments:
+    Arguments:
     H: (num_nodes*d) x f
+    d: sheaf dimension
     m: True or False use or not mediatos
     edge_index: 2xnnz
     sheaf: nnz x d x d (for general sheaf)
@@ -296,9 +311,11 @@ def SheafLaplacianGeneral(H, m, d, edge_index, sheaf, E=None):
     X_reduced = X_reduced.reshape(-1, MLP_hidden, d)  # nnz x f x d
     X_reduced = X_reduced.permute(0, 2, 1)  # nnz x d x f
 
-    # return edges_idx: idx in nnz array for edges for the graph assoc with the hyperedge
+    # return edges_idx: idx in nnz array for edges for the graph assoc
+    # with the hyperedge
     # edges_idx_diag: idx in the nnz array for edges corresp to the diagonal
-    # all_contained_hyperedges: idx for the hyperedges containing each node (help in the scatter phase)
+    # all_contained_hyperedges: idx for the hyperedges containing each node
+    # (help in the scatter phase)
     # hgcn_edges: all the new hyperedges
     edges_idx, edges_idx_diag, all_contained_hyperedges, hgcn_edges = reduce_graph(
         X_reduced, m, d, edge_index
@@ -319,7 +336,8 @@ def SheafLaplacianGeneral(H, m, d, edge_index, sheaf, E=None):
     F_dest_diag = torch.index_select(F, dim=0, index=edges_idx_diag[1])
     attributes_diag = torch.bmm(F_source_diag.transpose(1, 2), F_dest_diag)
 
-    # for each selfloop (x,x) aggregate the reduction for all hyperedges that node is part of sum_e F_v<e(X_v)^T F_v<e(X_v)
+    # for each selfloop (x,x) aggregate the reduction for all hyperedges that node is
+    # part of sum_e F_v<e(X_v)^T F_v<e(X_v)
     attributes_diag = scatter_add(attributes_diag, all_contained_hyperedges, dim=0)
     attributes = torch.concat([attributes, attributes_diag], axis=0)
 
@@ -343,17 +361,16 @@ def SheafLaplacianGeneral(H, m, d, edge_index, sheaf, E=None):
     return h_sheaf_index, h_sheaf_attributes
 
 
-def SheafLaplacianOrtho(H, m, d, edge_index, sheaf, E=None):
-    """
-    approximates the E defined by the E Laplacian with/without mediators
+def SheafLaplacianOrtho(H, m, d, edge_index, sheaf):
+    """Approximates the E defined by the E Laplacian with/without mediators.
 
-    arguments:
+    Arguments:
     H: (num_nodes*d) x f
+    d: dimension of the sheaf
     m: True or False use or not mediatos
     edge_index: 2xnnz
     sheaf: nnz x d x d (for general sheaf)
     """
-
     F = sheaf  # nnz x (d*d) (for ortho sheaf)
     num_nodes = H.shape[0] // d
     MLP_hidden = H.shape[-1]
@@ -379,9 +396,11 @@ def SheafLaplacianOrtho(H, m, d, edge_index, sheaf, E=None):
     X_reduced = X_reduced.reshape(-1, MLP_hidden, d)  # nnz x f x d
     X_reduced = X_reduced.permute(0, 2, 1)  # nnz x d x f
 
-    # return edges_idx: idx in nnz array for edges for the graph assoc with the hyperedge
+    # return edges_idx: idx in nnz array for edges for the graph assoc with the
+    # hyperedge
     # edges_idx_diag: idx in the nnz array for edges corresp to the diagonal
-    # all_contained_hyperedges: idx for the hyperedges containing each node (help in the scatter phase)
+    # all_contained_hyperedges: idx for the hyperedges containing each node
+    # (help in the scatter phase)
     # hgcn_edges: all the new hyperedges
     edges_idx, edges_idx_diag, all_contained_hyperedges, hgcn_edges = reduce_graph(
         X_reduced, m, d, edge_index
@@ -398,11 +417,13 @@ def SheafLaplacianOrtho(H, m, d, edge_index, sheaf, E=None):
     )  # -F_v<e(X_v)^T F_w<e(X_w)
 
     # normally we compute \sum_e F_v<e(X_v)^T F_v<e(X_v) for all edges e containing v
-    # NOTE: For ORTHOGONAL matrices we don't need to compute F_s^T @ F_D since it is always I
+    # NOTE: For ORTHOGONAL matrices we don't need to compute F_s^T @ F_D since it is
+    # always I
     attributes_diag = (
         torch.eye(d).unsqueeze(0).repeat((edges_idx_diag.shape[1], 1, 1)).to(H.device)
     )  # nnz x d x d
-    # for each selfloop (x,x) aggregate the reduction for all hyperedges that node is part of sum_e F_v<e(X_v)^T F_v<e(X_v)
+    # for each selfloop (x,x) aggregate the reduction for all hyperedges that node is
+    # part of sum_e F_v<e(X_v)^T F_v<e(X_v)
     attributes_diag = scatter_add(attributes_diag, all_contained_hyperedges, dim=0)  #
     attributes = torch.concat([attributes, attributes_diag], axis=0)
 

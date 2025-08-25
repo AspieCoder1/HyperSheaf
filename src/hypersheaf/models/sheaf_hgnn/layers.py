@@ -6,9 +6,7 @@
 #
 # Distributed under terms of the MIT license.
 
-"""
-This script contains layers used in AllSet and all other tested methods.
-"""
+"""This script contains layers used in AllSet and all other tested methods."""
 
 import torch
 import torch_sparse
@@ -70,8 +68,9 @@ def normalisation_matrices(
         return D, B
 
     elif norm_type == "block_norm":
-        # normalise using diag(HHT) and deg_e <- this take into account the values predicted in H as oposed to 0/1 as in the degree
-        # this way of computing the normalisation tensor is only valid for diagonal sheaf
+        # normalise using diag(HHT) and deg_e <- this take into account the values
+        # predicted in H as oposed to 0/1 as in the degree this way of computing the
+        # normalisation tensor is only valid for diagonal sheaf
         D = scatter_add(
             alpha * alpha, hyperedge_index[0], dim=0, dim_size=num_nodes * d
         )
@@ -89,8 +88,6 @@ def normalisation_matrices(
         return D, B
 
     elif norm_type == "sym_block_norm":
-        # normalise using diag(HHT) and deg_e <- this take into account the values predicted in H as oposed to 0/1 as in the degree
-        # this way of computing the normalisation tensor is only valid for diagonal sheaf
         D = scatter_add(
             alpha * alpha, hyperedge_index[0], dim=0, dim_size=num_nodes * d
         )
@@ -109,9 +106,8 @@ def normalisation_matrices(
 
 
 class HyperDiffusionDiagSheafConv(MessagePassing):
-    """
-    One layer of Sheaf Diffusion with diagonal Laplacian Y = (I-D^-1/2LD^-1) with L
-    normalised with B^-1
+    """One layer of Sheaf Diffusion with diagonal Laplacian Y = (I-D^-1/2LD^-1) with L
+    normalised with B^-1.
     """
 
     def __init__(
@@ -183,12 +179,11 @@ class HyperDiffusionDiagSheafConv(MessagePassing):
     def forward(
         self, x: Tensor, hyperedge_index: Tensor, alpha, num_nodes, num_edges
     ) -> Tensor:
-        r"""
-        Args:
-            x (Tensor): Node feature matrix {Nd x F}`.
-            hyperedge_index (LongTensor): The hyperedge indices, *i.e.*
-                the sparse incidence matrix Nd x Md} from nodes to edges.
-            alpha (Tensor, optional): restriction maps
+        r"""Args:
+        x (Tensor): Node feature matrix {Nd x F}`.
+        hyperedge_index (LongTensor): The hyperedge indices, *i.e.*
+            the sparse incidence matrix Nd x Md} from nodes to edges.
+        alpha (Tensor, optional): restriction maps.
         """
         if self.left_proj:
             x = x.t().reshape(-1, self.d)
@@ -295,9 +290,8 @@ class HyperDiffusionDiagSheafConv(MessagePassing):
 
 
 class HyperDiffusionOrthoSheafConv(MessagePassing):
-    """
-    One layer of Sheaf Diffusion with orthogonal Laplacian Y = (I-D^-1/2LD^-1) with L
-    normalised with B^-1
+    """One layer of Sheaf Diffusion with orthogonal Laplacian Y = (I-D^-1/2LD^-1) with L
+    normalised with B^-1.
     """
 
     def __init__(
@@ -372,12 +366,11 @@ class HyperDiffusionOrthoSheafConv(MessagePassing):
     def forward(
         self, x: Tensor, hyperedge_index: Tensor, alpha, num_nodes, num_edges
     ) -> Tensor:
-        r"""
-        Args:
-            x (Tensor): Node feature matrix {Nd x F}`.
-            hyperedge_index (LongTensor): The hyperedge indices, *i.e.*
-                the sparse incidence matrix Nd x Md} from nodes to edges.
-            alpha (Tensor, optional): restriction maps
+        r"""Args:
+        x (Tensor): Node feature matrix {Nd x F}`.
+        hyperedge_index (LongTensor): The hyperedge indices, *i.e.*
+            the sparse incidence matrix Nd x Md} from nodes to edges.
+        alpha (Tensor, optional): restriction maps.
         """
         if self.left_proj:
             x = x.t().reshape(-1, self.d)
@@ -484,9 +477,8 @@ class HyperDiffusionOrthoSheafConv(MessagePassing):
 
 
 class HyperDiffusionGeneralSheafConv(MessagePassing):
-    """
-    One layer of Sheaf Diffusion with general/lowrank Laplacian Y = (I-D^-1/2LD^-1)
-    with L normalised with B^-1
+    """One layer of Sheaf Diffusion with general/lowrank Laplacian Y = (I-D^-1/2LD^-1)
+    with L normalised with B^-1.
     """
 
     def __init__(
@@ -555,7 +547,8 @@ class HyperDiffusionGeneralSheafConv(MessagePassing):
         self.lin.reset_parameters()
         zeros(self.bias)
 
-    # this is just for block and sym_block normalisation since the matrices D^-1 is a proper inverse that need to be computed
+    # this is just for block and sym_block normalisation since the matrices D^-1 is a
+    # proper inverse that need to be computed
     def normalise(
         self, h_general_sheaf, hyperedge_index, norm_type, num_nodes, num_edges
     ):
@@ -587,13 +580,12 @@ class HyperDiffusionGeneralSheafConv(MessagePassing):
     def forward(
         self, x: Tensor, hyperedge_index: Tensor, alpha, num_nodes, num_edges
     ) -> Tensor:
-        r"""
+        r"""Args:
         Args:
-            Args:
-            x (Tensor): Node feature matrix {Nd x F}`.
-            hyperedge_index (LongTensor): The hyperedge indices, *i.e.*
-                the sparse incidence matrix Nd x Md} from nodes to edges.
-            alpha (Tensor, optional): restriction maps
+        x (Tensor): Node feature matrix {Nd x F}`.
+        hyperedge_index (LongTensor): The hyperedge indices, *i.e.*
+            the sparse incidence matrix Nd x Md} from nodes to edges.
+        alpha (Tensor, optional): restriction maps.
         """
         if self.left_proj:
             x = x.t().reshape(-1, self.d)
@@ -604,7 +596,6 @@ class HyperDiffusionGeneralSheafConv(MessagePassing):
         data_x = x
 
         if self.I_mask is None:  # prepare these in advance
-            # I_block = torch.block_diag(*[torch.ones((self.d, self.d)) for i in range(num_nodes)]).to(self.device)
             I_mask_indices = torch.stack(
                 [torch.arange(num_nodes), torch.arange(num_nodes)], dim=0
             )

@@ -20,9 +20,6 @@ from src.hypersheaf.utils import utils
 from src.hypersheaf.utils.orthogonal import Orthogonal
 
 
-# helper functions to predict sigma(MLP(x_v || h_e)) varying how thw attributes for hyperedge are computed
-
-
 class SheafBuilder(nn.Module, abc.ABC):
     def __init__(
         self,
@@ -44,7 +41,9 @@ class SheafBuilder(nn.Module, abc.ABC):
             sheaf_learner  # pick the way hyperedge feartures are computed
         )
         self.sheaf_dropout = sheaf_dropout
-        self.special_head = sheaf_special_head  # add a head having just 1 on the diagonal. this should be similar to the normal hypergraph conv
+        # add a head having just 1 on the diagonal. this should be similar to the normal
+        # hypergraph conv
+        self.special_head = sheaf_special_head
         self.d = stalk_dimension  # stalk dinension
         self.MLP_hidden = hidden_channels
         self.norm = allset_input_norm
@@ -189,8 +188,9 @@ class SheafBuilderDiag(SheafBuilder):
         # create a sparse incidence Nd x Ed
 
         # We need to modify indices from the NxE matrix
-        # to correspond to the large Nd x Ed matrix, but restrict only on the element of the diagonal of each block
-        # indices: scalar [i,j] -> block dxd with indices [d*i, d*i+1.. d*i+d-1; d*j, d*j+1 .. d*j+d-1]
+        # to correspond to the large Nd x Ed matrix, but restrict only on the element of
+        # the diagonal of each block with indices
+        # [i,j] -> block dxd with indices [d*i, d*i+1.. d*i+d-1; d*j, d*j+1 .. d*j+d-1]
         # attributes: reshape h_sheaf
 
         d_range = (
@@ -201,7 +201,8 @@ class SheafBuilderDiag(SheafBuilder):
         hyperedge_index = hyperedge_index.permute(0, 2, 1).reshape(2, -1)  # 2x(d*K)
         h_sheaf_index = hyperedge_index
 
-        # the resulting (index, values) pair correspond to the diagonal of each block sub-matrix
+        # the resulting (index, values) pair correspond to the diagonal of
+        # each block sub-matrix
         return h_sheaf_index, h_sheaf_attributes
 
 
@@ -261,8 +262,8 @@ class SheafBuilderGeneral(SheafBuilder):
             # from a d-dim tensor assoc to every entrence in edge_index
             # create a sparse incidence Nd x Ed
 
-            # modify indices to correspond to the big matrix and assign the weights
-            # indices: [i,j] -> [d*i, d*i.. d*i+d-1, d*i+d-1; d*j, d*j+1 .. d*j, d*j+1,..d*j+d-1]
+            # modify indices to correspond to the big matrix and assign the weights with
+            # [i,j] -> [d*i, d*i.. d*i+d-1, d*i+d-1; d*j, d*j+1 .. d*j, d*j+1,..d*j+d-1]
 
         d_range = torch.arange(self.d, device=x.device)
         d_range_edges = d_range.repeat(self.d).view(
@@ -331,15 +332,16 @@ class SheafBuilderOrtho(SheafBuilder):
             self.cp_V.reset_parameters()
 
     def compute_restriction_maps(self, x, e, hyperedge_index, h_sheaf):
-        # convert the d*(d-1)//2 params into orthonormal dxd matrices using housholder transformation
+        # convert the d*(d-1)//2 params into orthonormal dxd matrices using
+        # householder transformation
         h_sheaf = self.orth_transform(h_sheaf)  # sparse version of a NxExdxd tensor
 
         if self.sheaf_dropout:
             h_sheaf = F.dropout(h_sheaf, p=self.dropout, training=self.training)
 
         if self.special_head:
-            # add a head having just 1 on the diagonal. this should be similar to the normal hypergraph conv
-            # add a head having just 1 on the diagonal. this should be similar to the normal hypergraph conv
+            # add a head having just 1 on the diagonal. this should be similar to the
+            # normal hypergraph conv
             new_head_mask = np.ones((self.d, self.d))
             new_head_mask[:, -1] = np.zeros((self.d))
             new_head_mask[-1, :] = np.zeros((self.d))
@@ -354,7 +356,7 @@ class SheafBuilderOrtho(SheafBuilder):
         # from a d-dim tensor assoc to every entrence in edge_inde
         # create a sparse incidence Nd x Ed
         # modify indices to correspond to the big matrix and assign the weights
-        # indices: [i,j] -> [d*i, d*i.. d*i+d-1, d*i+d-1; d*j, d*j+1 .. d*j, d*j+1,..d*j+d-1]
+        # [i,j] -> [d*i, d*i.. d*i+d-1, d*i+d-1; d*j, d*j+1 .. d*j, d*j+1,..d*j+d-1]
 
         d_range = torch.arange(self.d, device=x.device)
         d_range_edges = d_range.repeat(self.d).view(
@@ -451,7 +453,7 @@ class SheafBuilderLowRank(SheafBuilder):
         # create a sparse incidence Nd x Ed
 
         # modify indices to correspond to the big matrix and assign the weights
-        # indices: [i,j] -> [d*i, d*i.. d*i+d-1, d*i+d-1; d*j, d*j+1 .. d*j, d*j+1,..d*j+d-1]
+        # indices: [i,j] -> [d*i, d*i.. d*i+d-1, d*i+d-1; .. d*j, d*j+1,..d*j+d-1]
 
         d_range = torch.arange(self.d, device=x.device)
         d_range_edges = d_range.repeat(self.d).view(

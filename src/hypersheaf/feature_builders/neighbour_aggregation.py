@@ -28,9 +28,7 @@ class EquivariantHeFeatBuilder(BaseHeFeatBuilder):
         input_norm: bool = True,
         **_kwargs,
     ):
-        """
-
-        :param num_node_feats: Number of input node features
+        """:param num_node_feats: Number of input node features
         :param out_channels: Number of output hyperedge features
         :param hidden_channels: Number of hidden channels for MLP
         :param input_norm: Normalise input or not

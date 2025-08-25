@@ -10,17 +10,13 @@ from torch.nn.parameter import Parameter
 
 
 class HyperGraphConvolution(Module):
-    """
-    Simple GCN layer, similar to https://arxiv.org/abs/1609.02907
-    """
+    """Simple GCN layer, similar to https://arxiv.org/abs/1609.02907."""
 
     def __init__(self, in_features, out_features, reapproximate=True, cuda=None):
-        """
-
-        Args:
-            in_features: number of input features
-            out_features: number of output features
-            reapproximate: reapproximate the adjacency structure of hypergraph
+        """Args:
+        in_features: number of input features
+        out_features: number of output features
+        reapproximate: reapproximate the adjacency structure of hypergraph.
         """
         super(HyperGraphConvolution, self).__init__()
         self.a, self.b = in_features, out_features
@@ -55,11 +51,10 @@ class HyperGraphConvolution(Module):
 
 
 class SparseMM(torch.autograd.Function):
-    """
-    Sparse x dense matrix multiplication with autograd support.
+    """Sparse x dense matrix multiplication with autograd support.
     Implementation by Soumith Chintala:
     https://discuss.pytorch.org/t/
-    does-pytorch-support-autograd-on-sparse-matrix/6156/7
+    does-pytorch-support-autograd-on-sparse-matrix/6156/7.
     """
 
     @staticmethod
@@ -82,10 +77,9 @@ class SparseMM(torch.autograd.Function):
 
 
 def Laplacian(V, E, X, m):
-    """
-    approximates the E defined by the E Laplacian with/without mediators
+    """Approximates the E defined by the E Laplacian with/without mediators.
 
-    arguments:
+    Arguments:
     V: number of vertices
     E: dictionary of hyperedges (key: hyperedge, value: list/set of hypernodes)
     X: features on the vertices
@@ -95,7 +89,6 @@ def Laplacian(V, E, X, m):
     returns:
     updated data with 'graph' as a key and its value the approximated hypergraph
     """
-
     edges, weights = [], {}
     rv = np.random.rand(X.shape[1])
 
@@ -146,10 +139,7 @@ def Laplacian(V, E, X, m):
 
 
 def update(Se, Ie, mediator, weights, c):
-    """
-    updates the weight on {Se,mediator} and {Ie,mediator}
-    """
-
+    """Updates the weight on {Se,mediator} and {Ie,mediator}."""
     if (Se, mediator) not in weights:
         weights[(Se, mediator)] = 0
     weights[(Se, mediator)] += float(1 / c)
@@ -170,17 +160,17 @@ def update(Se, Ie, mediator, weights, c):
 
 
 def adjacency(edges, weights, n):
+    """Computes an sparse adjacency matrix.
+
+    Arguments:
+        edges: list of pairs
+        weights: dictionary of edge weights (key: tuple
+            representing edge, value: weight on the edge)
+        n: number of nodes
+
+    returns: a scipy.sparse adjacency matrix with unit weight self loops for edges
+    with the given weights
     """
-    computes an sparse adjacency matrix
-
-    arguments:
-    edges: list of pairs
-    weights: dictionary of edge weights (key: tuple representing edge, value: weight on the edge)
-    n: number of nodes
-
-    returns: a scipy.sparse adjacency matrix with unit weight self loops for edges with the given weights
-    """
-
     dictionary = {tuple(item): index for index, item in enumerate(edges)}
     edges = [list(itm) for itm in dictionary.keys()]
     organised = []
@@ -202,17 +192,15 @@ def adjacency(edges, weights, n):
 
 
 def symnormalise(M):
-    """
-    symmetrically normalise sparse matrix
+    """Symmetrically normalise sparse matrix.
 
-    arguments:
+    Arguments:
     M: scipy sparse matrix
 
-    returns:
+    Returns:
     D^{-1/2} M D^{-1/2}
     where D is the diagonal node-degree matrix
     """
-
     d = np.array(M.sum(1))
 
     dhi = np.power(d, -1 / 2).flatten()
@@ -223,16 +211,14 @@ def symnormalise(M):
 
 
 def ssm2tst(M):
-    """
-    converts a scipy sparse matrix (ssm) to a torch sparse tensor (tst)
+    """Converts a scipy sparse matrix (ssm) to a torch sparse tensor (tst).
 
-    arguments:
+    Arguments:
     M: scipy sparse matrix
 
-    returns:
+    Returns:
     a torch sparse tensor of M
     """
-
     M = M.tocoo().astype(np.float32)
 
     indices = torch.from_numpy(np.vstack((M.row, M.col))).long()
@@ -243,17 +229,15 @@ def ssm2tst(M):
 
 
 def normalise(M):
-    """
-    row-normalise sparse matrix
+    """row-normalise sparse matrix.
 
-    arguments:
+    Arguments:
     M: scipy sparse matrix
 
-    returns:
+    Returns:
     D^{-1} M
-    where D is the diagonal node-degree matrix
+    where D is the diagonal node-degree matrix.
     """
-
     d = np.array(M.sum(1))
 
     di = np.power(d, -1).flatten()
@@ -284,8 +268,8 @@ def print_a_colored_ndarray(map, d, row_sep=""):
 
 
 def batched_sym_matrix_pow(matrices: torch.Tensor, p: float) -> torch.Tensor:
-    r"""
-    Power of a matrix using Eigen Decomposition.
+    """Power of a matrix using Eigen Decomposition.
+
     Args:
         matrices: A batch of matrices.
         p: Power.
@@ -293,8 +277,7 @@ def batched_sym_matrix_pow(matrices: torch.Tensor, p: float) -> torch.Tensor:
     Returns:
         Power of each matrix in the batch.
     """
-    # vals, vecs = torch.linalg.eigh(matrices)
-    # SVD is much faster than  vals, vecs = torch.linalg.eigh(matrices) for large batches.
+    # SVD is much faster than torch.linalg.eigh(matrices) for large batches.
     vecs, vals, _ = torch.linalg.svd(matrices)
     good = (
         vals > vals.max(-1, True).values * vals.size(-1) * torch.finfo(vals.dtype).eps
